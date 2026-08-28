@@ -2,14 +2,14 @@
   "name": "Vale o Frete?",
   "short_name": "Vale o Frete",
   "description": "Calculadora para motoristas de aplicativo — Mercado Livre Flex e Lalamove",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#3b82f6",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "./favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

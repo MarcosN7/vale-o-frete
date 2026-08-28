@@ -1,7 +1,7 @@
 const CACHE_NAME = 'vale-o-frete-v1';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
+  './',
+  './index.html',
 ];
 
 self.addEventListener('install', event => {
