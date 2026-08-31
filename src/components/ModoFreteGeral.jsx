@@ -15,7 +15,7 @@ import {
   evaluateFreight,
 } from '../utils';
 
-export default function ModoFreteGeral({ settings, onSaveHistory, initialData }) {
+export default function ModoFreteGeral({ settings, onSaveHistory, initialData, onCalculationChange }) {
   const [origem, setOrigem] = useState('');
   const [destino, setDestino] = useState('');
   const [valorFrete, setValorFrete] = useState('');
@@ -44,7 +44,7 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData })
       setIsRetornoVazio(Boolean(initialData.isRetornoVazio));
       setDistanciaRetorno(initialData.distanciaRetorno ? String(initialData.distanciaRetorno) : '');
       setPedagios(initialData.pedagios ? String(initialData.pedagios) : '');
-      setShowResult(false);
+      setShowResult(true);
       setSaved(false);
     }
   }, [initialData]);
@@ -57,6 +57,7 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData })
     }
     setShowResult(false);
     setSaved(false);
+    if (onCalculationChange) onCalculationChange(false);
   };
 
   const freteNum = parseFloat(valorFrete) || 0;
@@ -122,6 +123,7 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData })
     if (!canCalc) return;
     setShowResult(true);
     setSaved(false);
+    if (onCalculationChange) onCalculationChange(true);
   };
 
   const handleSaveToHistory = () => {
@@ -163,204 +165,225 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData })
     setOutrosCustosViagem('');
     setShowResult(false);
     setSaved(false);
+    if (onCalculationChange) onCalculationChange(false);
   };
 
   return (
-    <div>
-      {!settings?.consumoCombustivel && !settings?.consumoGasolina && (
-        <div className="no-config-banner">
-          ⚠️ Configure seu veículo para cálculos precisos (ícone ⚙️ no topo)
-        </div>
-      )}
-
-      {/* Card Principal de Dados do Frete */}
-      <div className="card">
-        {/* Origem e Destino */}
-        <div className="field-row">
-          <div className="field">
-            <label>📍 Origem <span className="hint">(opcional)</span></label>
-            <input
-              type="text"
-              placeholder="Ex: Curitiba - PR"
-              value={origem}
-              onChange={e => { setOrigem(e.target.value); setShowResult(false); setSaved(false); }}
-            />
-          </div>
-          <div className="field">
-            <label>🏁 Destino <span className="hint">(opcional)</span></label>
-            <input
-              type="text"
-              placeholder="Ex: Santos - SP"
-              value={destino}
-              onChange={e => { setDestino(e.target.value); setShowResult(false); setSaved(false); }}
-            />
-          </div>
-        </div>
-
-        {/* Valor do Frete */}
-        <div className="field">
-          <label>💰 Valor do Frete (R$)</label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Ex: 2800.00"
-            value={valorFrete}
-            onChange={e => { setValorFrete(e.target.value); setShowResult(false); setSaved(false); }}
-          />
-        </div>
-
-        {/* Distância de Ida */}
-        <div className="field">
-          <label>📏 Distância de Ida (km)</label>
-          <input
-            type="number"
-            step="1"
-            min="0"
-            placeholder="Ex: 420"
-            value={distanciaIda}
-            onChange={e => {
-              setDistanciaIda(e.target.value);
-              if (isRetornoVazio && !distanciaRetorno) {
-                setDistanciaRetorno(e.target.value);
-              }
-              setShowResult(false);
-              setSaved(false);
-            }}
-          />
-        </div>
-
-        {/* Switch / Checkbox Retorno Vazio */}
-        <div className="field" style={{ background: isRetornoVazio ? '#fef2f2' : 'var(--input-bg)', border: `1.5px solid ${isRetornoVazio ? '#fca5a5' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', padding: '12px', transition: 'all 0.2s' }}>
-          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: 0 }}>
-            <span style={{ fontWeight: 700, color: isRetornoVazio ? '#991b1b' : 'var(--text)' }}>
-              🚚 Considerar Retorno Vazio?
-            </span>
-            <input
-              type="checkbox"
-              style={{ width: 22, height: 22, cursor: 'pointer', accentColor: 'var(--red)' }}
-              checked={isRetornoVazio}
-              onChange={e => handleToggleRetornoVazio(e.target.checked)}
-            />
-          </label>
-
-          {isRetornoVazio && (
-            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed #fca5a5' }}>
-              <div className="field" style={{ marginBottom: 8 }}>
-                <label style={{ color: '#991b1b' }}>Distância do Retorno (km):</label>
-                <input
-                  type="number"
-                  step="1"
-                  min="0"
-                  placeholder={distanciaIda || 'Ex: 420'}
-                  value={distanciaRetorno}
-                  onChange={e => { setDistanciaRetorno(e.target.value); setShowResult(false); setSaved(false); }}
-                />
-              </div>
-              <p style={{ fontSize: '0.8rem', color: '#991b1b', margin: 0, fontWeight: 600 }}>
-                ⚠️ O cálculo considerará a quilometragem da volta ({voltaNum} km) sem receita adicional.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Resumo da Distância Total Considerada */}
-        {distanciaTotal > 0 && (
-          <div className="distance-summary" style={{ marginBottom: 16 }}>
-            <span className="ds-label">🏁 Distância Total Calculada:</span>
-            <span className="ds-value">
-              {distanciaTotal.toFixed(0)} km
-              {isRetornoVazio && (
-                <span className="ds-detail"> ({idaNum.toFixed(0)} km ida + {voltaNum.toFixed(0)} km volta)</span>
-              )}
-            </span>
+    <div className={`dashboard-grid ${showResult && canCalc ? 'has-result' : ''}`}>
+      {/* Coluna Esquerda: Formulário Estruturado em Passos */}
+      <div className="dashboard-col-left">
+        {!settings?.consumoCombustivel && !settings?.consumoGasolina && (
+          <div className="stale-banner" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1e40af' }}>
+            ℹ️ Usando parâmetros médios. Ajuste seu veículo no ícone ⚙️ no topo para máxima precisão.
           </div>
         )}
 
-        {/* Pedágios */}
-        <div className="field">
-          <label>🛣️ Pedágios Previstos (R$) <span className="hint">(opcional)</span></label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Ex: 145.00"
-            value={pedagios}
-            onChange={e => { setPedagios(e.target.value); setShowResult(false); setSaved(false); }}
-          />
-        </div>
-
-        {/* Alternador Nível de Cálculo (Rápido vs Completo) */}
-        <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-              NÍVEL DE DETALHAMENTO
-            </span>
-            <button
-              type="button"
-              onClick={() => setCalcLevel(prev => prev === 'rapido' ? 'completo' : 'rapido')}
-              style={{ padding: '4px 10px', fontSize: '0.78rem', background: calcLevel === 'completo' ? '#eff6ff' : 'var(--input-bg)', color: 'var(--primary)', border: '1px solid var(--primary)', borderRadius: 6 }}
-            >
-              {calcLevel === 'completo' ? '➖ Modo Rápido' : '➕ Detalhar Custos Extras'}
-            </button>
+        {/* Passo 01: O Frete */}
+        <div className="card">
+          <div className="card-header-step">
+            <span className="step-num">01</span>
+            <h3 className="step-title">Informações do Frete</h3>
           </div>
 
-          {calcLevel === 'completo' && (
-            <div style={{ background: 'var(--input-bg)', padding: '12px', borderRadius: 'var(--radius-sm)', marginTop: 8 }}>
-              <div className="field">
-                <label>🍲 Alimentação / Hospedagem / Diárias (R$)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Ex: 120.00"
-                  value={alimentacaoHospedagem}
-                  onChange={e => { setAlimentacaoHospedagem(e.target.value); setShowResult(false); setSaved(false); }}
-                />
+          {/* Origem e Destino */}
+          <div className="field-row">
+            <div className="field">
+              <label>Origem <span className="hint">(opcional)</span></label>
+              <input
+                type="text"
+                placeholder="Ex: São Paulo - SP"
+                value={origem}
+                onChange={e => { setOrigem(e.target.value); setShowResult(false); setSaved(false); }}
+              />
+            </div>
+            <div className="field">
+              <label>Destino <span className="hint">(opcional)</span></label>
+              <input
+                type="text"
+                placeholder="Ex: Curitiba - PR"
+                value={destino}
+                onChange={e => { setDestino(e.target.value); setShowResult(false); setSaved(false); }}
+              />
+            </div>
+          </div>
+
+          {/* Valor do Frete */}
+          <div className="field">
+            <label>💰 Valor Bruto do Frete (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="R$ 0,00 (Ex: 3500.00)"
+              value={valorFrete}
+              onChange={e => { setValorFrete(e.target.value); setShowResult(false); setSaved(false); }}
+            />
+          </div>
+
+          {/* Distância de Ida */}
+          <div className="field">
+            <label>📏 Distância de Ida (km)</label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              placeholder="0 km (Ex: 400)"
+              value={distanciaIda}
+              onChange={e => {
+                setDistanciaIda(e.target.value);
+                if (isRetornoVazio && !distanciaRetorno) {
+                  setDistanciaRetorno(e.target.value);
+                }
+                setShowResult(false);
+                setSaved(false);
+              }}
+            />
+          </div>
+
+          {/* Card Retorno Vazio */}
+          <div className={`retorno-vazio-card ${isRetornoVazio ? 'active' : ''}`}>
+            <label className="retorno-header">
+              <span className="retorno-title">
+                <span>🔄</span>
+                <span>Considerar Retorno Vazio?</span>
+              </span>
+              <input
+                type="checkbox"
+                style={{ width: 20, height: 20, cursor: 'pointer', accentColor: 'var(--danger)' }}
+                checked={isRetornoVazio}
+                onChange={e => handleToggleRetornoVazio(e.target.checked)}
+              />
+            </label>
+
+            {isRetornoVazio && (
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--danger-border)' }}>
+                <div className="field" style={{ marginBottom: 6 }}>
+                  <label style={{ color: 'var(--danger-text)', fontSize: '0.8rem' }}>
+                    Distância do Retorno (km):
+                  </label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    placeholder={distanciaIda || 'Ex: 400'}
+                    value={distanciaRetorno}
+                    onChange={e => { setDistanciaRetorno(e.target.value); setShowResult(false); setSaved(false); }}
+                  />
+                </div>
+                <p className="retorno-badge-alert" style={{ margin: 0 }}>
+                  ⚠️ O cálculo considerará {voltaNum} km de volta sem receita, impactando seu custo por km real.
+                </p>
               </div>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label>📦 Outros Custos desta Viagem (R$) <span className="hint">(ajudante, carga/descarga)</span></label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Ex: 50.00"
-                  value={outrosCustosViagem}
-                  onChange={e => { setOutrosCustosViagem(e.target.value); setShowResult(false); setSaved(false); }}
-                />
-              </div>
+            )}
+          </div>
+
+          {/* Resumo da Distância Total Considerada */}
+          {distanciaTotal > 0 && (
+            <div className="distance-summary">
+              <span className="ds-label">🏁 Distância Total a Rodar:</span>
+              <span className="ds-value">
+                {distanciaTotal.toFixed(0)} km
+                {isRetornoVazio && (
+                  <span className="ds-detail"> ({idaNum.toFixed(0)} km ida + {voltaNum.toFixed(0)} km volta)</span>
+                )}
+              </span>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Botões de Ação */}
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button
-          type="button"
-          className="calc-btn"
-          style={{ flex: 1 }}
-          disabled={!canCalc}
-          onClick={handleCalc}
-        >
-          {showResult ? 'Recalcular Análise' : 'Analisar Frete'}
-        </button>
-        {showResult && (
+        {/* Passo 02: Despesas e Custos */}
+        <div className="card">
+          <div className="card-header-step">
+            <span className="step-num">02</span>
+            <h3 className="step-title">Despesas da Viagem</h3>
+          </div>
+
+          {/* Pedágios */}
+          <div className="field">
+            <label>🛣️ Pedágios Previstos (R$) <span className="hint">(opcional)</span></label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="R$ 0,00 (Ex: 120.00)"
+              value={pedagios}
+              onChange={e => { setPedagios(e.target.value); setShowResult(false); setSaved(false); }}
+            />
+          </div>
+
+          {/* Modo Detalhado / Custos Extras */}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                OUTRAS DESPESAS ESPECÍFICAS
+              </span>
+              <button
+                type="button"
+                onClick={() => setCalcLevel(prev => prev === 'rapido' ? 'completo' : 'rapido')}
+                style={{ padding: '5px 12px', fontSize: '0.78rem', background: calcLevel === 'completo' ? 'var(--primary-light)' : 'var(--surface-hover)', color: 'var(--primary)', border: '1px solid var(--primary-border)', borderRadius: 6, fontWeight: 700 }}
+              >
+                {calcLevel === 'completo' ? '➖ Ocultar Extras' : '➕ Adicionar Diárias / Alimentação'}
+              </button>
+            </div>
+
+            {calcLevel === 'completo' && (
+              <div style={{ background: 'var(--surface-hover)', padding: '14px', borderRadius: 'var(--radius-sm)', marginTop: 12 }}>
+                <div className="field">
+                  <label>🍲 Alimentação & Hospedagem (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="R$ 0,00 (Ex: 150.00)"
+                    value={alimentacaoHospedagem}
+                    onChange={e => { setAlimentacaoHospedagem(e.target.value); setShowResult(false); setSaved(false); }}
+                  />
+                </div>
+                <div className="field" style={{ marginBottom: 0 }}>
+                  <label>📦 Outros Gastos <span className="hint">(ajudante, carga/descarga)</span></label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="R$ 0,00 (Ex: 80.00)"
+                    value={outrosCustosViagem}
+                    onChange={e => { setOutrosCustosViagem(e.target.value); setShowResult(false); setSaved(false); }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* CTA Principal */}
+        <div style={{ display: 'flex', gap: 12 }}>
           <button
             type="button"
             className="calc-btn"
-            style={{ flex: '0 0 auto', background: 'var(--input-bg)', color: 'var(--text)', boxShadow: 'var(--shadow)', width: 56 }}
-            onClick={handleReset}
-            title="Novo cálculo"
+            style={{ flex: 1 }}
+            disabled={!canCalc}
+            onClick={handleCalc}
           >
-            🔄
+            <span>⚡</span>
+            <span>{showResult ? 'RECALCULAR FRETE' : 'CALCULAR SE VALE A PENA'}</span>
           </button>
-        )}
+          {showResult && (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', padding: 0 }}
+              onClick={handleReset}
+              title="Limpar formulário"
+            >
+              🔄
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Exibição dos Resultados */}
+      {/* Coluna Direita: Resultado em Destaque */}
       {showResult && canCalc && (
-        <>
+        <div className="dashboard-col-right">
           <ResultDisplay
             valor={freteNum}
             distancia={distanciaTotal}
@@ -395,11 +418,10 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData })
             onClick={handleSaveToHistory}
             disabled={saved}
           >
-            {saved ? '✅ Salvo no histórico' : '📋 Salvar no histórico de fretes'}
+            {saved ? '✓ Salvo nos Meus Fretes' : '📋 Salvar no Histórico'}
           </button>
-        </>
+        </div>
       )}
     </div>
   );
 }
-

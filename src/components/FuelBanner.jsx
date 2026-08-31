@@ -29,13 +29,14 @@ export default function FuelBanner({ settings, onOpenSettings }) {
   const veiculoIcon = icons[tipoVeiculo] || '🚚';
 
   return (
-    <>
+    <div className="fuel-banner-wrapper">
       {isStale && (
         <div className="stale-banner" onClick={onOpenSettings}>
-          ⚠️ Preços de combustível não atualizados há {age} dias — toque para atualizar
+          <span>⚠️</span>
+          <span>Preços de combustível não atualizados há {age} dias — toque para atualizar</span>
         </div>
       )}
-      <div className="fuel-banner" onClick={onOpenSettings} style={{ cursor: 'pointer' }}>
+      <div className="fuel-banner" onClick={onOpenSettings} title="Clique para editar parâmetros do veículo">
         <div className="fb-item">
           <span className="fb-label">{veiculoIcon} {consumo} km/l</span>
         </div>
@@ -43,7 +44,7 @@ export default function FuelBanner({ settings, onOpenSettings }) {
           <>
             <div className="fb-divider" />
             <div className="fb-item">
-              <span className="fb-label">🛢️ Diesel: R$ {parseFloat(precoDiesel).toFixed(2)}</span>
+              <span className="fb-label">🛢️ Diesel R$ {parseFloat(precoDiesel).toFixed(2)}</span>
             </div>
           </>
         )}
@@ -51,7 +52,7 @@ export default function FuelBanner({ settings, onOpenSettings }) {
           <>
             <div className="fb-divider" />
             <div className="fb-item">
-              <span className="fb-label">⛽ Gas: R$ {parseFloat(precoGasolina).toFixed(2)}</span>
+              <span className="fb-label">⛽ Gasolina R$ {parseFloat(precoGasolina).toFixed(2)}</span>
             </div>
           </>
         )}
@@ -59,17 +60,19 @@ export default function FuelBanner({ settings, onOpenSettings }) {
           <>
             <div className="fb-divider" />
             <div className="fb-item">
-              <span className="fb-label">🌿 Eta: R$ {parseFloat(precoEtanol).toFixed(2)}</span>
+              <span className="fb-label">🌿 Etanol R$ {parseFloat(precoEtanol).toFixed(2)}</span>
             </div>
           </>
         )}
         {age !== null && !isStale && (
           <>
             <div className="fb-divider" />
-            <span className="fb-age">{age === 0 ? 'hoje' : `${age}d atrás`}</span>
+            <span className="fb-age">{age === 0 ? 'atualizado hoje' : `${age}d atrás`}</span>
           </>
         )}
+        <div className="fb-divider" />
+        <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700 }}>⚙️ Ajustar</span>
       </div>
-    </>
+    </div>
   );
 }

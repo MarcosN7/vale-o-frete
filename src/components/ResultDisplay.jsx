@@ -26,7 +26,7 @@ export default function ResultDisplay({
 }) {
   if (!valor || !distancia) return null;
 
-  // Se financials foi fornecido diretamente pelo ModoFreteGeral
+  // Renderização para ModoFreteGeral (Viagens)
   if (financials) {
     const {
       fuelCost,
@@ -44,16 +44,25 @@ export default function ResultDisplay({
       verdict,
     } = financials;
 
+    // Proporções para a barra de custos
+    const totalCostForBar = custoTotal > 0 ? custoTotal : 1;
+    const pFuel = ((fuelCost / totalCostForBar) * 100).toFixed(1);
+    const pTolls = (((pedagios || 0) / totalCostForBar) * 100).toFixed(1);
+    const pMaint = ((custoManutencao / totalCostForBar) * 100).toFixed(1);
+    const pTires = ((custoPneus / totalCostForBar) * 100).toFixed(1);
+    const pDeprec = ((custoDepreciacao / totalCostForBar) * 100).toFixed(1);
+    const pExtras = (((custosExtras || 0) + custoOutrosKm) / totalCostForBar * 100).toFixed(1);
+
     const handleShareFreight = async () => {
       const rotaStr = origem || destino ? `\n📍 ${origem || 'Origem'} ➔ ${destino || 'Destino'}` : '';
-      const retornoStr = isRetornoVazio ? ' (Ida + Retorno Vazio)' : '';
+      const retornoStr = isRetornoVazio ? ' (com Retorno Vazio)' : '';
       const text =
         `🚚 Vale o Frete? — Análise de Viagem${rotaStr}\n` +
         `📏 Distância: ${formatKm(distancia)}${retornoStr}\n` +
-        `💰 Frete Bruto: ${formatBRL(valor)}\n` +
-        `📉 Custos Totais: ${formatBRL(custoTotal)}\n` +
-        `💵 Lucro Estimado: ${formatBRL(lucro)} (${formatPercent(margem)})\n` +
-        `📊 Receita/km: ${formatBRL(receitaPorKm)}/km | Custo/km: ${formatBRL(custoPorKm)}/km\n` +
+        `💰 Frete: ${formatBRL(valor)}\n` +
+        `📉 Custos Estimados: ${formatBRL(custoTotal)}\n` +
+        `💵 Lucro Líquido: ${formatBRL(lucro)} (${formatPercent(margem)})\n` +
+        `📊 Receita: ${formatBRL(receitaPorKm)}/km | Custo: ${formatBRL(custoPorKm)}/km\n` +
         `🏁 ${verdict.emoji} ${verdict.title} — ${verdict.message}`;
 
       if (navigator.share) {
@@ -67,110 +76,141 @@ export default function ResultDisplay({
     };
 
     return (
-      <div>
+      <div className="result-card-container">
         {/* Card do Veredito Principal */}
-        <div className={`verdict-card ${verdict.color}`}>
-          <div className="verdict-emoji">{verdict.emoji}</div>
-          <div className="verdict-text">{verdict.title}</div>
-          <div className="verdict-detail" style={{ fontSize: '1rem', marginTop: 4, opacity: 0.95 }}>
-            {verdict.message}
+        <div className={`verdict-hero-card ${verdict.status}`}>
+          <div className="verdict-badge">
+            <span>{verdict.emoji}</span>
+            <span>{verdict.title}</span>
           </div>
+
+          <div className="verdict-profit-label">Seu Lucro Estimado</div>
+          <div className={`verdict-profit-value ${lucro >= 0 ? 'positive' : 'negative'}`}>
+            {formatBRL(lucro)}
+          </div>
+          <div className="verdict-rate-sub">
+            {formatBRL(lucroPorKm)} de lucro líquido por km rodado
+          </div>
+
+          <p className="verdict-explanation">
+            {verdict.message}
+          </p>
+
           {isRetornoVazio && (
-            <div style={{ fontSize: '0.82rem', marginTop: 6, background: 'rgba(0,0,0,0.15)', padding: '4px 10px', borderRadius: 6, display: 'inline-block' }}>
-              ⚠️ Cálculo considerando o retorno vazio ({formatKm(distanciaRetorno || distanciaIda)}) sem receita
+            <div className="retorno-badge-alert" style={{ marginTop: 8 }}>
+              ⚠️ Distância total de {formatKm(distancia)} computando ida + retorno vazio sem receita.
             </div>
           )}
+
           <button type="button" className="share-btn" onClick={handleShareFreight}>
-            📤 Compartilhar Análise
+            📤 Compartilhar Análise no WhatsApp
           </button>
         </div>
 
-        {/* 4 Métricas de Alto Destaque */}
-        <div className="result-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-          <div className="result-item" style={{ borderLeft: `4px solid ${lucro >= 0 ? 'var(--green)' : 'var(--red)'}` }}>
-            <div className="label">💵 Lucro Estimado</div>
-            <div className={`value ${lucro >= 0 ? 'positive' : 'negative'}`}>
+        {/* 4 Indicadores Chave em Grade 2x2 */}
+        <div className="kpi-grid">
+          <div className="kpi-card">
+            <span className="kpi-label">Lucro Estimado</span>
+            <span className={`kpi-value ${lucro >= 0 ? 'positive' : 'negative'}`}>
               {formatBRL(lucro)}
-            </div>
+            </span>
           </div>
-          <div className="result-item" style={{ borderLeft: `4px solid ${margem >= 15 ? 'var(--green)' : margem > 0 ? 'var(--yellow)' : 'var(--red)'}` }}>
-            <div className="label">📈 Margem Líquida</div>
-            <div className={`value ${margem >= 15 ? 'positive' : margem > 0 ? 'warning' : 'negative'}`}>
+          <div className="kpi-card">
+            <span className="kpi-label">Margem Líquida</span>
+            <span className={`kpi-value ${margem >= 20 ? 'positive' : margem > 8 ? 'warning' : 'negative'}`}>
               {formatPercent(margem)}
-            </div>
+            </span>
           </div>
-          <div className="result-item">
-            <div className="label">📏 Receita por Km</div>
-            <div className="value">
+          <div className="kpi-card">
+            <span className="kpi-label">Receita por Km</span>
+            <span className="kpi-value">
               {formatBRL(receitaPorKm)}/km
-            </div>
+            </span>
           </div>
-          <div className="result-item">
-            <div className="label">⛽ Custo por Km</div>
-            <div className="value negative">
+          <div className="kpi-card">
+            <span className="kpi-label">Custo por Km</span>
+            <span className="kpi-value negative">
               {formatBRL(custoPorKm)}/km
-            </div>
+            </span>
           </div>
         </div>
 
-        {/* Detalhamento de Custos da Viagem */}
-        <div className="card" style={{ marginTop: 12 }}>
-          <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 12 }}>
-            📋 Composição de Custos e Receitas
-          </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.9rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 6, borderBottom: '1px solid var(--border)' }}>
-              <span>💰 Valor Bruto do Frete</span>
-              <span style={{ fontWeight: 700, color: 'var(--text)' }}>{formatBRL(valor)}</span>
+        {/* Distribuição Visual de Custos */}
+        <div className="cost-breakdown-card">
+          <div className="cost-breakdown-title">
+            <span>Para onde vai o dinheiro</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatBRL(custoTotal)} total</span>
+          </div>
+
+          {/* Barra Proporcional */}
+          <div className="cost-progress-bar">
+            {pFuel > 0 && <div className="cost-progress-segment combustivel" style={{ width: `${pFuel}%` }} title={`Combustível: ${pFuel}%`} />}
+            {pTolls > 0 && <div className="cost-progress-segment pedagio" style={{ width: `${pTolls}%` }} title={`Pedágio: ${pTolls}%`} />}
+            {pMaint > 0 && <div className="cost-progress-segment manutencao" style={{ width: `${pMaint}%` }} title={`Manutenção: ${pMaint}%`} />}
+            {pTires > 0 && <div className="cost-progress-segment pneus" style={{ width: `${pTires}%` }} title={`Pneus: ${pTires}%`} />}
+            {pDeprec > 0 && <div className="cost-progress-segment depreciacao" style={{ width: `${pDeprec}%` }} title={`Depreciação: ${pDeprec}%`} />}
+            {pExtras > 0 && <div className="cost-progress-segment extras" style={{ width: `${pExtras}%` }} title={`Extras: ${pExtras}%`} />}
+          </div>
+
+          {/* Lista de Composição dos Custos */}
+          <div className="cost-list">
+            <div className="cost-list-item">
+              <div className="cost-list-left">
+                <span className="cost-dot combustivel" />
+                <span>Combustível ({fuelLitros.toFixed(1)}L)</span>
+              </div>
+              <span className="cost-list-value">{formatBRL(fuelCost)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#991b1b' }}>
-              <span>⛽ Combustível ({fuelLitros.toFixed(1)}L)</span>
-              <span style={{ fontWeight: 600 }}>- {formatBRL(fuelCost)}</span>
-            </div>
+
             {pedagios > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#991b1b' }}>
-                <span>🛣️ Pedágios</span>
-                <span style={{ fontWeight: 600 }}>- {formatBRL(pedagios)}</span>
+              <div className="cost-list-item">
+                <div className="cost-list-left">
+                  <span className="cost-dot pedagio" />
+                  <span>Pedágios</span>
+                </div>
+                <span className="cost-list-value">{formatBRL(pedagios)}</span>
               </div>
             )}
+
             {custoManutencao > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#991b1b' }}>
-                <span>🔧 Manutenção / Revisão</span>
-                <span style={{ fontWeight: 600 }}>- {formatBRL(custoManutencao)}</span>
+              <div className="cost-list-item">
+                <div className="cost-list-left">
+                  <span className="cost-dot manutencao" />
+                  <span>Manutenção ({formatKm(distancia)})</span>
+                </div>
+                <span className="cost-list-value">{formatBRL(custoManutencao)}</span>
               </div>
             )}
+
             {custoPneus > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#991b1b' }}>
-                <span>🛞 Desgaste de Pneus</span>
-                <span style={{ fontWeight: 600 }}>- {formatBRL(custoPneus)}</span>
+              <div className="cost-list-item">
+                <div className="cost-list-left">
+                  <span className="cost-dot pneus" />
+                  <span>Desgaste de Pneus</span>
+                </div>
+                <span className="cost-list-value">{formatBRL(custoPneus)}</span>
               </div>
             )}
+
             {custoDepreciacao > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#991b1b' }}>
-                <span>📉 Depreciação do Veículo</span>
-                <span style={{ fontWeight: 600 }}>- {formatBRL(custoDepreciacao)}</span>
+              <div className="cost-list-item">
+                <div className="cost-list-left">
+                  <span className="cost-dot depreciacao" />
+                  <span>Depreciação do Veículo</span>
+                </div>
+                <span className="cost-list-value">{formatBRL(custoDepreciacao)}</span>
               </div>
             )}
-            {custoOutrosKm > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#991b1b' }}>
-                <span>🛢️ Outros Custos por Km</span>
-                <span style={{ fontWeight: 600 }}>- {formatBRL(custoOutrosKm)}</span>
+
+            {(custosExtras > 0 || custoOutrosKm > 0) && (
+              <div className="cost-list-item">
+                <div className="cost-list-left">
+                  <span className="cost-dot extras" />
+                  <span>Alimentação / Diárias / Outros</span>
+                </div>
+                <span className="cost-list-value">{formatBRL((custosExtras || 0) + custoOutrosKm)}</span>
               </div>
             )}
-            {custosExtras > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#991b1b' }}>
-                <span>🍲 Alimentação / Hospedagem / Extras</span>
-                <span style={{ fontWeight: 600 }}>- {formatBRL(custosExtras)}</span>
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, marginTop: 4, borderTop: '2px solid var(--border)', fontWeight: 800 }}>
-              <span>📉 Total de Custos Estimados</span>
-              <span style={{ color: 'var(--red)' }}>- {formatBRL(custoTotal)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 6, fontWeight: 800, fontSize: '1.05rem' }}>
-              <span>💵 Lucro Líquido Real</span>
-              <span style={{ color: lucro >= 0 ? 'var(--green)' : 'var(--red)' }}>{formatBRL(lucro)}</span>
-            </div>
           </div>
         </div>
       </div>
@@ -202,7 +242,7 @@ export default function ResultDisplay({
   const extras = custosExtras || 0;
   const lucro = valor - fuelCost - extras;
   const reaisPorKm = distancia > 0 ? lucro / distancia : 0;
-  const reaisPorParada = paradas > 0 ? lucro / paradas : null;
+  const margem = valor > 0 ? (lucro / valor) * 100 : 0;
   const verdict = getVerdict(reaisPorKm, thresholds);
 
   const coletaNum = parseFloat(distanciaColeta) || 0;
@@ -219,13 +259,13 @@ export default function ResultDisplay({
       `${distDet}${paradas ? ` • ${paradas} paradas` : ''}\n` +
       `💰 Valor: ${formatBRL(valor)}\n` +
       `⛽ Combust.: ${formatBRL(fuelCost)}\n` +
-      `📊 Lucro: ${formatBRL(lucro)}\n` +
+      `📊 Lucro: ${formatBRL(lucro)} (${formatPercent(margem)})\n` +
       `🏁 ${verdict.emoji} ${verdict.text} (${formatBRL(reaisPorKm)}/km)`;
 
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Vale o Frete?', text });
-      } catch { /* usuário cancelou */ }
+      } catch { /* cancelado */ }
     } else {
       await navigator.clipboard.writeText(text);
       alert('Resultado copiado para a área de transferência!');
@@ -233,91 +273,47 @@ export default function ResultDisplay({
   };
 
   return (
-    <div>
-      {/* Verdict */}
-      <div className={`verdict-card ${verdict.color}`}>
-        <div className="verdict-emoji">{verdict.emoji}</div>
-        <div className="verdict-text">{verdict.text}</div>
-        <div className="verdict-detail">{verdict.detail}</div>
+    <div className="result-card-container">
+      <div className={`verdict-hero-card ${verdict.color === 'green' ? 'good' : verdict.color === 'yellow' ? 'warning' : 'bad'}`}>
+        <div className="verdict-badge">
+          <span>{verdict.emoji}</span>
+          <span>{verdict.text}</span>
+        </div>
+        <div className="verdict-profit-label">Lucro Líquido Estimado</div>
+        <div className={`verdict-profit-value ${lucro >= 0 ? 'positive' : 'negative'}`}>
+          {formatBRL(lucro)}
+        </div>
+        <div className="verdict-rate-sub">
+          {formatBRL(reaisPorKm)} líquido por km
+        </div>
         {coletaNum > 0 && (
-          <div style={{ fontSize: '0.85rem', opacity: 0.95, marginTop: 4 }}>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: 4 }}>
             Considerando {coletaNum.toFixed(1)} km de deslocamento até a coleta
           </div>
         )}
         <button type="button" className="share-btn" onClick={handleShare}>
-          📤 Compartilhar
+          📤 Compartilhar no WhatsApp
         </button>
       </div>
 
-      {/* Fuel comparison */}
-      {isFlex && (
-        <div className="fuel-comparison">
-          <h4>⛽ Comparação de Combustível</h4>
-          <div className={`fuel-option ${bestFuel === 'gasolina' ? 'best' : ''}`}>
-            <span className="fuel-name">
-              Gasolina ({gasResult.litros.toFixed(1)}L)
-              {bestFuel === 'gasolina' && <span className="badge">MELHOR</span>}
-            </span>
-            <span className="fuel-cost">{formatBRL(gasResult.custo)}</span>
-          </div>
-          <div className={`fuel-option ${bestFuel === 'etanol' ? 'best' : ''}`}>
-            <span className="fuel-name">
-              Etanol ({etaResult.litros.toFixed(1)}L)
-              {bestFuel === 'etanol' && <span className="badge">MELHOR</span>}
-            </span>
-            <span className="fuel-cost">{formatBRL(etaResult.custo)}</span>
-          </div>
+      <div className="kpi-grid">
+        <div className="kpi-card">
+          <span className="kpi-label">Valor Oferecido</span>
+          <span className="kpi-value">{formatBRL(valor)}</span>
         </div>
-      )}
-
-      {/* Result grid */}
-      <div className="result-grid">
-        <div className="result-item">
-          <div className="label">💰 Valor Oferecido</div>
-          <div className="value">{formatBRL(valor)}</div>
+        <div className="kpi-card">
+          <span className="kpi-label">Custo Combustível</span>
+          <span className="kpi-value negative">{formatBRL(fuelCost)}</span>
         </div>
-        <div className="result-item">
-          <div className="label">⛽ Custo Combust.</div>
-          <div className="value negative">{formatBRL(fuelCost)}</div>
-        </div>
-        {extras > 0 && (
-          <div className="result-item">
-            <div className="label">🛣️ Custos Extras</div>
-            <div className="value negative">{formatBRL(extras)}</div>
-          </div>
-        )}
-        <div className="result-item">
-          <div className="label">📊 Lucro Líquido</div>
-          <div className={`value ${lucro >= 0 ? 'positive' : 'negative'}`}>
-            {formatBRL(lucro)}
-          </div>
-        </div>
-        <div className="result-item">
-          <div className="label">📏 R$/km Líquido Real</div>
-          <div className={`value ${reaisPorKm >= 0 ? 'positive' : 'negative'}`}>
+        <div className="kpi-card">
+          <span className="kpi-label">R$/km Líquido</span>
+          <span className={`kpi-value ${reaisPorKm >= 0 ? 'positive' : 'negative'}`}>
             {formatBRL(reaisPorKm)}/km
-          </div>
+          </span>
         </div>
-        {reaisPorParada !== null && (
-          <div className="result-item">
-            <div className="label">📦 R$/Parada</div>
-            <div className={`value ${reaisPorParada >= 0 ? 'positive' : 'negative'}`}>
-              {formatBRL(reaisPorParada)}
-            </div>
-          </div>
-        )}
-        <div className="result-item">
-          <div className="label">🔥 Litros Usados</div>
-          <div className="value">{fuelLitros.toFixed(1)}L</div>
-        </div>
-        <div className="result-item">
-          <div className="label">🏁 Km Total Rodado</div>
-          <div className="value">{distancia.toFixed(1)} km</div>
-          {coletaNum > 0 && (
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>
-              {coletaNum.toFixed(1)}km coleta + {rotaNum.toFixed(1)}km rota
-            </div>
-          )}
+        <div className="kpi-card">
+          <span className="kpi-label">Distância Total</span>
+          <span className="kpi-value">{formatKm(distancia)}</span>
         </div>
       </div>
     </div>

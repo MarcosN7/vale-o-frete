@@ -20,6 +20,7 @@ export default function App() {
   const [mode, setMode] = useState('frete'); // frete (padrão) | ml | lalamove
   const [history, setHistory] = useState([]);
   const [initialFreightData, setInitialFreightData] = useState(null);
+  const [toastMsg, setToastMsg] = useState('');
 
   useEffect(() => {
     const saved = loadSettings();
@@ -31,9 +32,17 @@ export default function App() {
     setHistory(loadHistory());
   }, []);
 
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => {
+      setToastMsg('');
+    }, 3000);
+  };
+
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
     saveSettings(newSettings);
+    showToast('✓ Configurações do veículo salvas!');
   };
 
   const handleSaveHistory = (entry) => {
@@ -42,6 +51,7 @@ export default function App() {
       saveHistory(updated);
       return updated;
     });
+    showToast('✓ Frete salvo no histórico com sucesso!');
   };
 
   const handleDeleteHistoryItem = (id) => {
@@ -50,100 +60,154 @@ export default function App() {
       saveHistory(updated);
       return updated;
     });
+    showToast('Frete removido do histórico.');
   };
 
   const handleClearHistory = () => {
-    setHistory([]);
-    clearHistory();
+    if (window.confirm('Deseja realmente limpar todo o histórico de fretes?')) {
+      setHistory([]);
+      clearHistory();
+      showToast('Histórico limpo.');
+    }
   };
 
   const handleSelectHistoryEntry = (entry) => {
     if (entry.mode === 'frete') {
       setMode('frete');
       setInitialFreightData({ ...entry });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 120, behavior: 'smooth' });
     } else if (entry.mode === 'ml') {
       setMode('ml');
     } else if (entry.mode === 'lalamove') {
       setMode('lalamove');
     }
+    showToast('Dados do frete carregados no formulário!');
+  };
+
+  const handleStartFirstCalc = () => {
+    setMode('frete');
+    window.scrollTo({ top: 100, behavior: 'smooth' });
   };
 
   return (
     <>
+      {/* Header SaaS */}
       <header className="app-header">
-        <div>
-          <h1>🚚 Vale o Frete?</h1>
-          <p style={{ fontSize: '0.75rem', opacity: 0.9, fontWeight: 500, margin: 0 }}>
-            Descubra se o frete realmente vale a pena.
-          </p>
+        <div className="header-content">
+          <div className="logo-wrapper">
+            <div className="logo-icon">🚚</div>
+            <div className="logo-text">
+              <h1>
+                <span>Vale o Frete?</span>
+                <span className="logo-badge">PRO</span>
+              </h1>
+              <p>Análise financeira de fretes</p>
+            </div>
+          </div>
+
+          <div className="header-actions">
+            <button
+              type="button"
+              className="gear-btn"
+              onClick={() => setShowSettings(true)}
+              title="Configurar veículo e custos"
+            >
+              <span>⚙️</span>
+              <span className="gear-text">Meu Veículo</span>
+            </button>
+          </div>
         </div>
-        <button type="button" className="gear-btn" onClick={() => setShowSettings(true)} title="Configurações do Veículo">
-          ⚙️
-        </button>
       </header>
 
+      {/* Barra de Status do Veículo */}
       <FuelBanner settings={settings} onOpenSettings={() => setShowSettings(true)} />
 
-      <div className="mode-tabs" style={{ overflowX: 'auto' }}>
-        <button
-          type="button"
-          className={mode === 'frete' ? 'active' : ''}
-          onClick={() => { setMode('frete'); setInitialFreightData(null); }}
-        >
-          🚛 Análise de Frete
-        </button>
-        <button
-          type="button"
-          className={mode === 'ml' ? 'active' : ''}
-          onClick={() => setMode('ml')}
-        >
-          📦 Mercado Livre
-        </button>
-        <button
-          type="button"
-          className={mode === 'lalamove' ? 'active' : ''}
-          onClick={() => setMode('lalamove')}
-        >
-          🏍️ LalaMove / inDrive
-        </button>
+      <div className="app-container">
+        {/* Hero Section */}
+        <section className="hero-section">
+          <h2 className="hero-title">Vale a pena aceitar esse frete?</h2>
+          <p className="hero-subtitle">
+            Calcule custos operacionais, consumo e retorno vazio para tomar a melhor decisão antes de pegar a estrada.
+          </p>
+        </section>
+
+        {/* Seletor de Modo SaaS */}
+        <div className="mode-tabs-wrapper">
+          <div className="mode-tabs">
+            <button
+              type="button"
+              className={mode === 'frete' ? 'active' : ''}
+              onClick={() => { setMode('frete'); setInitialFreightData(null); }}
+            >
+              <span>🚛</span>
+              <span>Viagem / Frete Geral</span>
+            </button>
+            <button
+              type="button"
+              className={mode === 'ml' ? 'active' : ''}
+              onClick={() => setMode('ml')}
+            >
+              <span>📦</span>
+              <span>Mercado Livre Flex</span>
+            </button>
+            <button
+              type="button"
+              className={mode === 'lalamove' ? 'active' : ''}
+              onClick={() => setMode('lalamove')}
+            >
+              <span>🏍️</span>
+              <span>LalaMove / inDrive</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Conteúdo Principal */}
+        <main className="main-content">
+          {mode === 'frete' && (
+            <ModoFreteGeral
+              settings={settings}
+              onSaveHistory={handleSaveHistory}
+              initialData={initialFreightData}
+            />
+          )}
+          {mode === 'ml' && (
+            <ModoML
+              settings={settings}
+              onSaveHistory={handleSaveHistory}
+            />
+          )}
+          {mode === 'lalamove' && (
+            <ModoLalamove
+              settings={settings}
+              onSaveHistory={handleSaveHistory}
+            />
+          )}
+
+          {/* Histórico SaaS */}
+          <History
+            history={history}
+            onClear={handleClearHistory}
+            onSelectEntry={handleSelectHistoryEntry}
+            onDeleteItem={handleDeleteHistoryItem}
+            onStartFirstCalc={handleStartFirstCalc}
+          />
+        </main>
       </div>
 
-      <main className="main-content">
-        {mode === 'frete' && (
-          <ModoFreteGeral
-            settings={settings}
-            onSaveHistory={handleSaveHistory}
-            initialData={initialFreightData}
-          />
-        )}
-        {mode === 'ml' && (
-          <ModoML
-            settings={settings}
-            onSaveHistory={handleSaveHistory}
-          />
-        )}
-        {mode === 'lalamove' && (
-          <ModoLalamove
-            settings={settings}
-            onSaveHistory={handleSaveHistory}
-          />
-        )}
-
-        <History
-          history={history}
-          onClear={handleClearHistory}
-          onSelectEntry={handleSelectHistoryEntry}
-          onDeleteItem={handleDeleteHistoryItem}
-        />
-      </main>
-
+      {/* Modal de Configurações */}
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         settings={settings}
         onSave={handleSaveSettings}
       />
+
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="toast-notification">
+          <span>{toastMsg}</span>
+        </div>
+      )}
     </>
   );
 }

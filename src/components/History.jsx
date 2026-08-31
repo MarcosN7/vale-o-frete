@@ -1,82 +1,107 @@
 import { formatBRL, formatKm, formatPercent, exportHistoryCSV } from '../utils';
 
-export default function History({ history, onClear, onSelectEntry, onDeleteItem }) {
+export default function History({ history, onClear, onSelectEntry, onDeleteItem, onStartFirstCalc }) {
   const totalKm = history.reduce((sum, h) => sum + (h.distancia || 0), 0);
   const totalLucro = history.reduce((sum, h) => sum + (h.lucro || 0), 0);
+  const totalFretes = history.reduce((sum, h) => sum + (h.valor || 0), 0);
 
   return (
-    <div className="history-section">
-      <h3>
-        <span>📋 Histórico de Cálculos</span>
+    <div className="history-section" id="historico">
+      <div className="history-header">
+        <h3>
+          <span>Meus Fretes</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+            ({history.length} {history.length === 1 ? 'registro' : 'registros'})
+          </span>
+        </h3>
         {history.length > 0 && (
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <button
               type="button"
-              style={{ padding: '6px 10px', fontSize: '0.75rem', background: 'var(--input-bg)', color: 'var(--primary)', border: '1.5px solid var(--primary)', borderRadius: 6 }}
+              className="btn-secondary"
+              style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 4 }}
               onClick={() => exportHistoryCSV(history)}
-              title="Exportar CSV"
+              title="Exportar dados para planilha CSV"
             >
-              📥 CSV
+              <span>📥</span>
+              <span>Exportar CSV</span>
             </button>
             <button
               type="button"
               className="btn-danger"
-              style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+              style={{ padding: '6px 12px', fontSize: '0.8rem' }}
               onClick={onClear}
             >
               Limpar
             </button>
           </div>
         )}
-      </h3>
+      </div>
 
       {history.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#94a3b8', padding: '20px 0', fontSize: '0.9rem' }}>
-          Nenhum cálculo registrado ainda
-        </p>
+        <div className="empty-state-card">
+          <div className="empty-state-icon">🚛</div>
+          <h4>Você ainda não analisou nenhum frete</h4>
+          <p>
+            Calcule seu primeiro frete acima para começar a acompanhar sua rentabilidade e custos por km.
+          </p>
+          {onStartFirstCalc && (
+            <button
+              type="button"
+              className="btn-primary"
+              style={{ padding: '10px 20px', fontSize: '0.88rem' }}
+              onClick={onStartFirstCalc}
+            >
+              ⚡ Começar primeiro cálculo
+            </button>
+          )}
+        </div>
       ) : (
         <>
-          {history.map((item) => {
-            const isFrete = item.mode === 'frete';
-            const modoLabel = item.mode === 'ml'
-              ? '📦 Mercado Livre'
-              : item.mode === 'lalamove'
-              ? '🏍️ LalaMove / inDrive'
-              : '🚛 Análise de Frete';
+          <div className="history-list">
+            {history.map((item) => {
+              const isFrete = item.mode === 'frete';
+              const modoLabel = item.mode === 'ml'
+                ? '📦 Mercado Livre'
+                : item.mode === 'lalamove'
+                ? '🏍️ LalaMove / inDrive'
+                : '🚛 Viagem de Carga';
 
-            return (
-              <div key={item.id} className="history-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div className="hi-left">
-                    <span className="hi-mode">
-                      {modoLabel} {item.verdictTitle ? `• ${item.verdictTitle}` : ''}
-                    </span>
-                    {isFrete && (item.origem || item.destino) && (
-                      <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)' }}>
-                        {item.origem || 'Origem'} ➔ {item.destino || 'Destino'}
+              return (
+                <div key={item.id} className="history-card-item">
+                  <div className="hi-top-row">
+                    <div>
+                      <span className="hi-mode-badge">{modoLabel}</span>
+                      <h4 className="hi-route-title">
+                        {isFrete && (item.origem || item.destino)
+                          ? `${item.origem || 'Origem'} ➔ ${item.destino || 'Destino'}`
+                          : `Frete de ${formatBRL(item.valor)}`
+                        }
+                      </h4>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <div className={`hi-profit-badge ${item.lucro >= 0 ? 'positive' : 'negative'}`}>
+                        {formatBRL(item.lucro)}
+                      </div>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        {item.margem !== undefined ? `Margem ${formatPercent(item.margem)}` : 'lucro estimado'}
                       </span>
-                    )}
-                    <span className="hi-info">
-                      {formatBRL(item.valor)} • {formatKm(item.distancia)}
-                      {item.isRetornoVazio ? ' (com retorno vazio)' : ''}
-                      {item.margem !== undefined ? ` • Margem: ${formatPercent(item.margem)}` : ''}
-                      {item.paradas ? ` • ${item.paradas} entregas` : ''}
-                    </span>
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                      {new Date(item.timestamp).toLocaleString('pt-BR')}
-                    </span>
+                    </div>
                   </div>
 
-                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                    <span className={`hi-profit ${item.lucro >= 0 ? 'positive' : 'negative'}`}>
-                      {formatBRL(item.lucro)}
+                  <div className="hi-details-row">
+                    <span>
+                      Bruto: <strong>{formatBRL(item.valor)}</strong> • {formatKm(item.distancia)}
+                      {item.isRetornoVazio ? ' (retorno vazio)' : ''}
                     </span>
-                    <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+
+                    <div className="hi-actions">
                       {onSelectEntry && (
                         <button
                           type="button"
+                          className="hi-btn-repeat"
                           onClick={() => onSelectEntry(item)}
-                          style={{ padding: '3px 8px', fontSize: '0.72rem', background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--primary)' }}
                           title="Recarregar dados no formulário"
                         >
                           🔄 Repetir
@@ -85,9 +110,9 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem 
                       {onDeleteItem && (
                         <button
                           type="button"
+                          className="hi-btn-delete"
                           onClick={() => onDeleteItem(item.id)}
-                          style={{ padding: '3px 6px', fontSize: '0.72rem', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 4, color: '#dc2626' }}
-                          title="Excluir este cálculo"
+                          title="Excluir registro"
                         >
                           ✕
                         </button>
@@ -95,24 +120,25 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem 
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
 
+          {/* Rodapé com Totais Consolidados */}
           <div className="history-footer">
             <div className="hf-item">
-              <div className="hf-label">Total Km</div>
-              <div className="hf-value">{totalKm.toFixed(1)}</div>
+              <div className="hf-label">Faturamento</div>
+              <div className="hf-value" style={{ color: 'var(--brand-dark)' }}>{formatBRL(totalFretes)}</div>
             </div>
             <div className="hf-item">
-              <div className="hf-label">Lucro Total</div>
-              <div className="hf-value" style={{ color: totalLucro >= 0 ? 'var(--green)' : 'var(--red)' }}>
+              <div className="hf-label">Total Km Rodado</div>
+              <div className="hf-value">{totalKm.toFixed(0)} km</div>
+            </div>
+            <div className="hf-item">
+              <div className="hf-label">Lucro Líquido Acumulado</div>
+              <div className="hf-value" style={{ color: totalLucro >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatBRL(totalLucro)}
               </div>
-            </div>
-            <div className="hf-item">
-              <div className="hf-label">Cálculos</div>
-              <div className="hf-value">{history.length}</div>
             </div>
           </div>
         </>
