@@ -1,81 +1,69 @@
 # 🚚 Vale o Frete?
 
-> Calculadora para motoristas de aplicativo decidirem em segundos se uma corrida ou rota vale a pena — considerando o custo real de combustível.
+> **Descubra se o frete realmente vale a pena.**  
+> Ferramenta profissional de análise financeira e tomada de decisão para motoristas e transportadores autônomos.
 
-Feito para **Mercado Livre Envios Flex**, **LalaMove** e **inDrive Fretes**, funciona 100% no navegador do celular, sem cadastro e sem backend.
-
----
-
-## 📱 Demonstração
-
-| Calculadora | Resultado | Configurações |
-|---|---|---|
-| Preencha valor, distância e paradas | Veredito instantâneo 🟢🟡🔴 | Configure seu veículo uma vez |
+Desenvolvido para viagens de carga em geral e fretes urbanos (**Mercado Livre Envios Flex**, **LalaMove** e **inDrive Fretes**). Funciona 100% no navegador do celular, sem cadastro e sem necessidade de backend.
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Funcionalidades Principais
 
-### 🧮 Duas calculadoras com distância de aproximação/coleta
-- **Mercado Livre Envios Flex** — valor da rota, paradas, deslocamento até a coleta e rota de entregas → lucro por parada e por km real
-- **LalaMove / inDrive Fretes** — valor da corrida, deslocamento até a coleta, rota da entrega e pedágios/custos extras → lucro líquido real
+### 🚛 1. Análise Completa de Fretes (Viagens)
+- **Informações do Frete**: Origem, Destino, Valor bruto, Distância de ida e Pedágios.
+- **Recurso de Retorno Vazio**: Switch inteligente que dobra a quilometragem e ajusta os indicadores instantaneamente com aviso visual destacando o custo da volta sem receita.
+- **Cálculo Rápido vs Completo**: Permite calcular em segundos com as médias salvas do veículo ou detalhar despesas extras como alimentação, hospedagem e ajudante.
 
-### 🟢🟡🔴 Veredito visual rápido
-Resultado em destaque com cor de fundo para decisão em segundos:
-- 🟢 **Verde** — Vale a pena!
-- 🟡 **Amarelo** — No limite
-- 🔴 **Vermelho** — Não vale a pena
+### 📦 2. Fretes Urbanos e Entregas Rápidas
+- **Mercado Livre Envios Flex**: Valor da rota, quantidade de paradas, deslocamento até o galpão e rota de entrega → lucro por parada e por km real.
+- **LalaMove / inDrive Fretes**: Valor da corrida, deslocamento até o cliente, trajeto de entrega e pedágios extras.
 
-As faixas de R$/km são configuráveis pelo próprio motorista.
+### 🟢🟡🔴 3. Veredito e Tomada de Decisão
+Card visual de alto destaque que responde imediatamente: **"Devo aceitar esse frete?"**
+- 🟢 **VALE A PENA!** — Margem de lucro saudável ($\ge 22\%$) e bom retorno por km.
+- 🟡 **VALE COM ATENÇÃO** — Margem positiva porém apertada ($10\%$ a $22\%$).
+- 🔴 **NÃO VALE A PENA** — Margem baixa ($< 10\%$) ou prejuízo financeiro.
 
-### ⛽ Preço de combustível por estado
-- Botão **"Preencher pelos preços médios do meu estado"** usa o GPS do celular + OpenStreetMap para detectar o estado automaticamente
-- Preços médios estaduais embutidos no app (fonte: ANP — Agência Nacional do Petróleo)
-- Seletor manual com todos os 27 estados caso o GPS não esteja disponível
-- Alerta automático se os preços não forem atualizados há mais de 7 dias
+### 📊 4. Quatro Métricas de Destaque
+- 💵 **Lucro Líquido Estimado** (R$)
+- 📈 **Margem Líquida** (%)
+- 📏 **Receita por Km** (R$/km)
+- ⛽ **Custo por Km** (R$/km)
+- Tabela detalhada com a composição de combustível, desgaste de pneus, manutenção, depreciação e pedágios.
 
-### 🚗 Suporte a veículo flex
-- Configure consumo e preço para **gasolina e etanol**
-- O app calcula os dois e indica qual combustível é mais barato para aquela rota
+### ⚙️ 5. Configurações "Meu Veículo"
+- **Tipos de Veículo**: 🚛 Carreta / Bitrem, 🚚 Caminhão Toco/Truck, 🚐 Van / VUC, 🚗 Carro de Passeio, 🏍️ Moto.
+- **Combustíveis**: Suporte a **Diesel**, Gasolina, Etanol e Flex.
+- **Custos Operacionais por Km**: Manutenção, Desgaste de Pneus, Depreciação e Outros por km.
+- **Preços Médios ANP**: Detecção por GPS ou seletor com todos os 27 estados do Brasil.
 
-### 🗺️ Distância real de rota
-- **Modo manual** — informe os km diretamente
-- **Modo por endereços** — informe os pontos da rota e o app calcula a distância real de dirigir usando [OSRM](http://project-osrm.org/) + [Nominatim (OpenStreetMap)](https://nominatim.org/), sem necessidade de chave de API
+### 📋 6. Histórico e Repetição de Cálculo
+- Salva o histórico das viagens calculadas com data, rota, valor, distância, lucro e margem.
+- Botão **"🔄 Repetir"**: Recarrega todos os dados da viagem no formulário com 1 clique.
+- Exclusão individual de registros e exportação para planilha **`.csv`**.
 
-### 📋 Histórico do dia
-- Cada corrida salva manualmente (você decide o que entra)
-- Totais acumulados: km rodado, lucro total, número de corridas
-- Exportar histórico como `.csv` para planilha
-- Dados persistidos no `localStorage` (filtrados por dia automaticamente)
-
-### 📤 Compartilhar resultado
-- Botão no card do veredito envia o resumo via WhatsApp, Telegram ou qualquer app (Web Share API)
-- Em desktop, copia para a área de transferência
-
-### 📱 PWA — Instalável no celular
-- Funciona como app nativo: adicione à tela inicial pelo navegador
-- Funciona offline após o primeiro acesso
+### 📱 7. PWA — Instalável e Mobile-First
+- Interface limpa com botões grandes, pensada para uso na cabine do caminhão ou durante paradas.
+- Adicione à tela inicial pelo navegador do celular e use offline.
 
 ---
 
-## 🛠️ Tecnologias
+## 🛠️ Tecnologias Utilizadas
 
 | Camada | Tecnologia |
 |---|---|
-| Frontend | React 19 + Vite 8 |
-| Estilo | CSS puro, mobile-first |
-| Persistência | `localStorage` (sem backend) |
-| Geolocalização | Browser Geolocation API (nativa) |
-| Geocodificação de estado | [Nominatim / OpenStreetMap](https://nominatim.openstreetmap.org/) |
-| Cálculo de rota | [OSRM](http://router.project-osrm.org/) |
-| Preços de combustível | Tabela ANP por estado (embutida) |
-| PWA | `manifest.json` + Service Worker |
-
-> Todas as APIs externas são **gratuitas e sem chave de API**.
+| Frontend | React 19 + Vite 7 |
+| Estilo | CSS3 puro (Mobile-First, Design System nativo) |
+| Persistência | `localStorage` (Privacidade total, sem cadastro) |
+| Geolocalização | Browser Geolocation API |
+| Geocodificação de Estado | [Nominatim / OpenStreetMap](https://nominatim.openstreetmap.org/) |
+| Cálculo de Rota por Endereço | [OSRM](http://project-osrm.org/) |
+| Preços de Combustível | Base ANP (Agência Nacional do Petróleo) |
+| PWA | Web App Manifest + Service Worker |
 
 ---
 
-## 🚀 Como rodar localmente
+## 🚀 Como Rodar Localmente
 
 ```bash
 # Clone o repositório
@@ -85,55 +73,45 @@ cd vale-o-frete
 # Instale as dependências
 npm install
 
-# Rode em desenvolvimento
+# Inicie o servidor de desenvolvimento
 npm run dev
 # Acesse http://localhost:5173
 ```
 
 ```bash
-# Build de produção
+# Gerar build de produção
 npm run build
+
+# Pré-visualizar build localmente
 npm run preview
 ```
 
 ---
 
-## ⚙️ Configuração do veículo
-
-No primeiro acesso, configure:
-
-- **Tipo de veículo** — Carro, Moto ou Van
-- **Consumo** — km/l na gasolina (e no etanol, se for flex)
-- **Preço do combustível** — detectado automaticamente pelo estado ou manual
-- **Faixas do veredito** — R$/km mínimo para cada cor (padrão: < R$0,50 🔴 | < R$1,00 🟡 | acima 🟢)
-
-As configurações ficam salvas no dispositivo entre sessões.
-
----
-
-## 📁 Estrutura do projeto
+## 📁 Estrutura do Projeto
 
 ```
 vale-o-frete/
 ├── public/
 │   ├── favicon.svg
-│   ├── manifest.json        # PWA manifest
-│   └── sw.js                # Service Worker
+│   ├── manifest.json            # Configuração PWA
+│   └── sw.js                    # Service Worker Offline
 ├── src/
 │   ├── services/
-│   │   ├── fuelPrices.js    # Tabela ANP + detecção por GPS
-│   │   └── osrm.js          # Geocodificação + cálculo de rota
+│   │   ├── fuelPrices.js        # Tabela ANP (Diesel, Gasolina, Etanol) + Detecção GPS
+│   │   └── osrm.js              # Geocodificação e roteamento OpenStreetMap
 │   ├── components/
-│   │   ├── SettingsModal.jsx  # Configurações do veículo
-│   │   ├── FuelBanner.jsx     # Resumo rápido de configuração
-│   │   ├── DistanceInput.jsx  # Input manual ou por endereços
-│   │   ├── ResultDisplay.jsx  # Veredito + breakdown de custos
-│   │   ├── ModoML.jsx         # Calculadora Mercado Livre Flex
-│   │   ├── ModoLalamove.jsx   # Calculadora Lalamove
-│   │   └── History.jsx        # Histórico + exportar CSV
-│   ├── App.jsx
-│   ├── utils.js              # Cálculos, thresholds, localStorage
-│   └── index.css
+│   │   ├── ModoFreteGeral.jsx   # Calculadora principal de fretes e viagens
+│   │   ├── ModoML.jsx           # Modo Mercado Livre Flex
+│   │   ├── ModoLalamove.jsx     # Modo LalaMove / inDrive
+│   │   ├── ResultDisplay.jsx    # Card de veredito e breakdown financeiro
+│   │   ├── DistanceInput.jsx    # Entrada manual e cálculo de rota
+│   │   ├── SettingsModal.jsx    # Configurações do veículo e custos operacionais
+│   │   ├── FuelBanner.jsx       # Resumo de combustível no topo
+│   │   └── History.jsx          # Histórico com repetição e exportação CSV
+│   ├── App.jsx                  # Navegação por abas e gerenciamento de estado
+│   ├── utils.js                 # Motor de cálculo financeiro desacoplado
+│   └── index.css                # Estilos globais e responsivos
 ├── index.html
 ├── vite.config.js
 └── package.json
@@ -141,14 +119,15 @@ vale-o-frete/
 
 ---
 
-## 🌐 Deploy gratuito
+## 🌐 Deploy na Vercel
 
-Conecte o repositório ao [Vercel](https://vercel.com) ou [Netlify](https://netlify.com) para publicar online com HTTPS — necessário para o GPS funcionar no celular.
-
-No Vercel: importe o repositório → framework detectado automaticamente como Vite → deploy em 1 clique.
+O projeto está otimizado para deploy instantâneo na **Vercel**:
+1. Conecte seu repositório GitHub à Vercel.
+2. O framework Vite será detectado automaticamente.
+3. Cada `git push` na branch `main` atualizará a versão online em produção.
 
 ---
 
 ## 📄 Licença
 
-MIT — use, modifique e distribua livremente.
+Distribuído sob a licença **MIT** — livre para uso pessoal e comercial.
