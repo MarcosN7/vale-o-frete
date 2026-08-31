@@ -33,7 +33,7 @@ body {
 
 #root {
   min-height: 100dvh;
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto;
   padding-bottom: 32px;
 }
@@ -226,6 +226,7 @@ button:active { transform: scale(0.97); }
 
 .result-item .value { font-size: 1.35rem; font-weight: 700; color: var(--text); }
 .result-item .value.positive { color: var(--green); }
+.result-item .value.warning { color: #d97706; }
 .result-item .value.negative { color: var(--red); }
 
 /* Fuel comparison */

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import SettingsModal from './components/SettingsModal';
+import ModoFreteGeral from './components/ModoFreteGeral';
 import ModoML from './components/ModoML';
 import ModoLalamove from './components/ModoLalamove';
 import History from './components/History';
@@ -16,8 +17,9 @@ if ('serviceWorker' in navigator) {
 export default function App() {
   const [settings, setSettings] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [mode, setMode] = useState('ml');
+  const [mode, setMode] = useState('frete'); // frete (padrão) | ml | lalamove
   const [history, setHistory] = useState([]);
+  const [initialFreightData, setInitialFreightData] = useState(null);
 
   useEffect(() => {
     const saved = loadSettings();
@@ -42,35 +44,98 @@ export default function App() {
     });
   };
 
+  const handleDeleteHistoryItem = (id) => {
+    setHistory(prev => {
+      const updated = prev.filter(item => item.id !== id);
+      saveHistory(updated);
+      return updated;
+    });
+  };
+
   const handleClearHistory = () => {
     setHistory([]);
     clearHistory();
   };
 
+  const handleSelectHistoryEntry = (entry) => {
+    if (entry.mode === 'frete') {
+      setMode('frete');
+      setInitialFreightData({ ...entry });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (entry.mode === 'ml') {
+      setMode('ml');
+    } else if (entry.mode === 'lalamove') {
+      setMode('lalamove');
+    }
+  };
+
   return (
     <>
       <header className="app-header">
-        <h1>🚚 Vale o Frete?</h1>
-        <button className="gear-btn" onClick={() => setShowSettings(true)}>⚙️</button>
+        <div>
+          <h1>🚚 Vale o Frete?</h1>
+          <p style={{ fontSize: '0.75rem', opacity: 0.9, fontWeight: 500, margin: 0 }}>
+            Descubra se o frete realmente vale a pena.
+          </p>
+        </div>
+        <button type="button" className="gear-btn" onClick={() => setShowSettings(true)} title="Configurações do Veículo">
+          ⚙️
+        </button>
       </header>
 
       <FuelBanner settings={settings} onOpenSettings={() => setShowSettings(true)} />
 
-      <div className="mode-tabs">
-        <button className={mode === 'ml' ? 'active' : ''} onClick={() => setMode('ml')}>
-          📦 Mercado Livre Flex
+      <div className="mode-tabs" style={{ overflowX: 'auto' }}>
+        <button
+          type="button"
+          className={mode === 'frete' ? 'active' : ''}
+          onClick={() => { setMode('frete'); setInitialFreightData(null); }}
+        >
+          🚛 Análise de Frete
         </button>
-        <button className={mode === 'lalamove' ? 'active' : ''} onClick={() => setMode('lalamove')}>
+        <button
+          type="button"
+          className={mode === 'ml' ? 'active' : ''}
+          onClick={() => setMode('ml')}
+        >
+          📦 Mercado Livre
+        </button>
+        <button
+          type="button"
+          className={mode === 'lalamove' ? 'active' : ''}
+          onClick={() => setMode('lalamove')}
+        >
           🏍️ LalaMove / inDrive
         </button>
       </div>
 
       <main className="main-content">
-        {mode === 'ml'
-          ? <ModoML settings={settings} onSaveHistory={handleSaveHistory} />
-          : <ModoLalamove settings={settings} onSaveHistory={handleSaveHistory} />
-        }
-        <History history={history} onClear={handleClearHistory} />
+        {mode === 'frete' && (
+          <ModoFreteGeral
+            settings={settings}
+            onSaveHistory={handleSaveHistory}
+            initialData={initialFreightData}
+          />
+        )}
+        {mode === 'ml' && (
+          <ModoML
+            settings={settings}
+            onSaveHistory={handleSaveHistory}
+          />
+        )}
+        {mode === 'lalamove' && (
+          <ModoLalamove
+            settings={settings}
+            onSaveHistory={handleSaveHistory}
+          />
+        )}
+
+        <History
+          history={history}
+          onClear={handleClearHistory}
+          onSelectEntry={handleSelectHistoryEntry}
+          onDeleteItem={handleDeleteHistoryItem}
+        />
       </main>
 
       <SettingsModal
