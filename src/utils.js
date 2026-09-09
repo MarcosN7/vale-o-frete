@@ -563,3 +563,19 @@ export function getPriceAge(settings) {
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 
+const ONBOARDING_KEY = 'vof_onboarding_completed';
+
+export function isOnboardingCompleted() {
+  try {
+    return localStorage.getItem(ONBOARDING_KEY) === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+export function setOnboardingCompleted(completed = true) {
+  try {
+    localStorage.setItem(ONBOARDING_KEY, completed ? 'true' : 'false');
+  } catch (e) { /* ignore */ }
+}
+

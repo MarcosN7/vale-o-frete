@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import SettingsModal from './components/SettingsModal';
 import PlatformSettingsModal from './components/PlatformSettingsModal';
+import OnboardingTour from './components/OnboardingTour';
 import ModoFreteGeral from './components/ModoFreteGeral';
 import ModoML from './components/ModoML';
 import ModoLalamove from './components/ModoLalamove';
@@ -14,6 +15,7 @@ import {
   clearHistory,
   loadPlatforms,
   savePlatforms,
+  isOnboardingCompleted,
   DEFAULT_PLATFORMS,
 } from './utils';
 
@@ -29,6 +31,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [platforms, setPlatforms] = useState(DEFAULT_PLATFORMS);
   const [showPlatformSettings, setShowPlatformSettings] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [mode, setMode] = useState('frete'); // frete (padrão) | ml | lalamove
   const [history, setHistory] = useState([]);
   const [initialFreightData, setInitialFreightData] = useState(null);
@@ -43,6 +46,14 @@ export default function App() {
     }
     setHistory(loadHistory());
     setPlatforms(loadPlatforms());
+
+    // Se for o primeiro acesso, inicia o tutorial após renderização inicial
+    if (!isOnboardingCompleted()) {
+      const tourTimer = setTimeout(() => {
+        setShowTour(true);
+      }, 600);
+      return () => clearTimeout(tourTimer);
+    }
   }, []);
 
   const showToast = (msg) => {
@@ -230,6 +241,7 @@ export default function App() {
         onClose={() => setShowSettings(false)}
         settings={settings}
         onSave={handleSaveSettings}
+        onRestartTour={() => setShowTour(true)}
       />
 
       {/* Modal de Configurações de Plataformas */}
@@ -238,6 +250,12 @@ export default function App() {
         onClose={() => setShowPlatformSettings(false)}
         platforms={platforms}
         onSavePlatforms={handleSavePlatforms}
+      />
+
+      {/* Tutorial Interativo de Primeiro Acesso */}
+      <OnboardingTour
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
       />
 
       {/* Toast Notification */}

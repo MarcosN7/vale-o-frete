@@ -257,7 +257,7 @@ export default function ModoFreteGeral({
           </div>
 
           {/* Valor do Frete */}
-          <div className="field">
+          <div className="field" id="tour-valor-frete">
             <label>💰 Valor Bruto do Frete (R$)</label>
             <input
               type="number"
@@ -270,7 +270,7 @@ export default function ModoFreteGeral({
           </div>
 
           {/* Seleção da Plataforma */}
-          <div className="field" style={{ background: 'var(--surface-hover)', padding: '12px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+          <div className="field" id="tour-plataforma" style={{ background: 'var(--surface-hover)', padding: '12px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <label style={{ margin: 0, fontWeight: 700, color: 'var(--brand-dark)' }}>
                 🏢 Onde você conseguiu esse frete?
@@ -359,61 +359,64 @@ export default function ModoFreteGeral({
             )}
           </div>
 
-          {/* Distância de Ida */}
-          <div className="field">
-            <label>📏 Distância de Ida (km)</label>
-            <input
-              type="number"
-              step="1"
-              min="0"
-              placeholder="0 km (Ex: 400)"
-              value={distanciaIda}
-              onChange={e => {
-                setDistanciaIda(e.target.value);
-                if (isRetornoVazio && !distanciaRetorno) {
-                  setDistanciaRetorno(e.target.value);
-                }
-                setShowResult(false);
-                setSaved(false);
-              }}
-            />
-          </div>
-
-          {/* Card Retorno Vazio */}
-          <div className={`retorno-vazio-card ${isRetornoVazio ? 'active' : ''}`}>
-            <label className="retorno-header">
-              <span className="retorno-title">
-                <span>🔄</span>
-                <span>Considerar Retorno Vazio?</span>
-              </span>
+          {/* Distância e Retorno Vazio */}
+          <div id="tour-distancia-retorno">
+            {/* Distância de Ida */}
+            <div className="field">
+              <label>📏 Distância de Ida (km)</label>
               <input
-                type="checkbox"
-                style={{ width: 20, height: 20, cursor: 'pointer', accentColor: 'var(--danger)' }}
-                checked={isRetornoVazio}
-                onChange={e => handleToggleRetornoVazio(e.target.checked)}
+                type="number"
+                step="1"
+                min="0"
+                placeholder="0 km (Ex: 400)"
+                value={distanciaIda}
+                onChange={e => {
+                  setDistanciaIda(e.target.value);
+                  if (isRetornoVazio && !distanciaRetorno) {
+                    setDistanciaRetorno(e.target.value);
+                  }
+                  setShowResult(false);
+                  setSaved(false);
+                }}
               />
-            </label>
+            </div>
 
-            {isRetornoVazio && (
-              <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--danger-border)' }}>
-                <div className="field" style={{ marginBottom: 6 }}>
-                  <label style={{ color: 'var(--danger-text)', fontSize: '0.8rem' }}>
-                    Distância do Retorno (km):
-                  </label>
-                  <input
-                    type="number"
-                    step="1"
-                    min="0"
-                    placeholder={distanciaIda || 'Ex: 400'}
-                    value={distanciaRetorno}
-                    onChange={e => { setDistanciaRetorno(e.target.value); setShowResult(false); setSaved(false); }}
-                  />
+            {/* Card Retorno Vazio */}
+            <div className={`retorno-vazio-card ${isRetornoVazio ? 'active' : ''}`}>
+              <label className="retorno-header">
+                <span className="retorno-title">
+                  <span>🔄</span>
+                  <span>Considerar Retorno Vazio?</span>
+                </span>
+                <input
+                  type="checkbox"
+                  style={{ width: 20, height: 20, cursor: 'pointer', accentColor: 'var(--danger)' }}
+                  checked={isRetornoVazio}
+                  onChange={e => handleToggleRetornoVazio(e.target.checked)}
+                />
+              </label>
+
+              {isRetornoVazio && (
+                <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--danger-border)' }}>
+                  <div className="field" style={{ marginBottom: 6 }}>
+                    <label style={{ color: 'var(--danger-text)', fontSize: '0.8rem' }}>
+                      Distância do Retorno (km):
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      placeholder={distanciaIda || 'Ex: 400'}
+                      value={distanciaRetorno}
+                      onChange={e => { setDistanciaRetorno(e.target.value); setShowResult(false); setSaved(false); }}
+                    />
+                  </div>
+                  <p className="retorno-badge-alert" style={{ margin: 0 }}>
+                    ⚠️ O cálculo considerará {voltaNum} km de volta sem receita, impactando seu custo por km real.
+                  </p>
                 </div>
-                <p className="retorno-badge-alert" style={{ margin: 0 }}>
-                  ⚠️ O cálculo considerará {voltaNum} km de volta sem receita, impactando seu custo por km real.
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Resumo da Distância Total Considerada */}
@@ -431,7 +434,7 @@ export default function ModoFreteGeral({
         </div>
 
         {/* Passo 02: Despesas e Custos */}
-        <div className="card">
+        <div className="card" id="tour-despesas">
           <div className="card-header-step">
             <span className="step-num">02</span>
             <h3 className="step-title">Despesas da Viagem</h3>
@@ -495,7 +498,7 @@ export default function ModoFreteGeral({
         </div>
 
         {/* CTA Principal */}
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12 }} id="tour-calc-btn">
           <button
             type="button"
             className="calc-btn"

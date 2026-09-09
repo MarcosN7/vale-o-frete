@@ -381,6 +381,24 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave }) {
           </div>
         </div>
 
+        {/* Ajuda e Tutorial */}
+        {onRestartTour && (
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 14 }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontWeight: 700 }}
+              onClick={() => {
+                onClose();
+                onRestartTour();
+              }}
+            >
+              <span>🎓</span>
+              <span>Ver tutorial interativo novamente</span>
+            </button>
+          </div>
+        )}
+
         <div className="save-btn-row">
           <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
           <button type="button" className="btn-primary" onClick={handleSave}>Salvar Configurações</button>
