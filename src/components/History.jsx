@@ -71,7 +71,14 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem,
                 <div key={item.id} className="history-card-item">
                   <div className="hi-top-row">
                     <div>
-                      <span className="hi-mode-badge">{modoLabel}</span>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                        <span className="hi-mode-badge">{modoLabel}</span>
+                        {item.platformName && (
+                          <span className="hi-mode-badge" style={{ background: '#eff6ff', color: 'var(--primary)', borderColor: 'var(--primary-border)' }}>
+                            🏢 {item.platformName}
+                          </span>
+                        )}
+                      </div>
                       <h4 className="hi-route-title">
                         {isFrete && (item.origem || item.destino)
                           ? `${item.origem || 'Origem'} ➔ ${item.destino || 'Destino'}`
@@ -85,14 +92,16 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem,
                         {formatBRL(item.lucro)}
                       </div>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                        {item.margem !== undefined ? `Margem ${formatPercent(item.margem)}` : 'lucro estimado'}
+                        {item.margem !== undefined ? `Margem ${formatPercent(item.margem)}` : 'lucro real'}
                       </span>
                     </div>
                   </div>
 
                   <div className="hi-details-row">
                     <span>
-                      Bruto: <strong>{formatBRL(item.valor)}</strong> • {formatKm(item.distancia)}
+                      Bruto: <strong>{formatBRL(item.valor)}</strong>
+                      {item.totalPlatformFees > 0 ? ` • Taxas: -${formatBRL(item.totalPlatformFees)}` : ''}
+                      {` • ${formatKm(item.distancia)}`}
                       {item.isRetornoVazio ? ' (retorno vazio)' : ''}
                     </span>
 

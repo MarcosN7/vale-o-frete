@@ -1,11 +1,21 @@
 import { useState, useEffect } from 'react';
 import SettingsModal from './components/SettingsModal';
+import PlatformSettingsModal from './components/PlatformSettingsModal';
 import ModoFreteGeral from './components/ModoFreteGeral';
 import ModoML from './components/ModoML';
 import ModoLalamove from './components/ModoLalamove';
 import History from './components/History';
 import FuelBanner from './components/FuelBanner';
-import { loadSettings, saveSettings, loadHistory, saveHistory, clearHistory } from './utils';
+import {
+  loadSettings,
+  saveSettings,
+  loadHistory,
+  saveHistory,
+  clearHistory,
+  loadPlatforms,
+  savePlatforms,
+  DEFAULT_PLATFORMS,
+} from './utils';
 
 // Register PWA service worker
 if ('serviceWorker' in navigator) {
@@ -17,6 +27,8 @@ if ('serviceWorker' in navigator) {
 export default function App() {
   const [settings, setSettings] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [platforms, setPlatforms] = useState(DEFAULT_PLATFORMS);
+  const [showPlatformSettings, setShowPlatformSettings] = useState(false);
   const [mode, setMode] = useState('frete'); // frete (padrão) | ml | lalamove
   const [history, setHistory] = useState([]);
   const [initialFreightData, setInitialFreightData] = useState(null);
@@ -30,6 +42,7 @@ export default function App() {
       setShowSettings(true);
     }
     setHistory(loadHistory());
+    setPlatforms(loadPlatforms());
   }, []);
 
   const showToast = (msg) => {
@@ -43,6 +56,12 @@ export default function App() {
     setSettings(newSettings);
     saveSettings(newSettings);
     showToast('✓ Configurações do veículo salvas!');
+  };
+
+  const handleSavePlatforms = (newPlatforms) => {
+    setPlatforms(newPlatforms);
+    savePlatforms(newPlatforms);
+    showToast('✓ Plataformas atualizadas!');
   };
 
   const handleSaveHistory = (entry) => {
@@ -109,8 +128,17 @@ export default function App() {
             <button
               type="button"
               className="gear-btn"
+              onClick={() => setShowPlatformSettings(true)}
+              title="Configurar taxas de plataformas"
+            >
+              <span>🏢</span>
+              <span className="gear-text">Plataformas</span>
+            </button>
+            <button
+              type="button"
+              className="gear-btn"
               onClick={() => setShowSettings(true)}
-              title="Configurar veículo e custos"
+              title="Configurar veículo e custos operacionais"
             >
               <span>⚙️</span>
               <span className="gear-text">Meu Veículo</span>
@@ -127,7 +155,7 @@ export default function App() {
         <section className="hero-section">
           <h2 className="hero-title">Vale a pena aceitar esse frete?</h2>
           <p className="hero-subtitle">
-            Calcule custos operacionais, consumo e retorno vazio para tomar a melhor decisão antes de pegar a estrada.
+            Calcule taxas de plataformas, consumo e retorno vazio para saber exatamente quanto sobra para você.
           </p>
         </section>
 
@@ -166,8 +194,10 @@ export default function App() {
           {mode === 'frete' && (
             <ModoFreteGeral
               settings={settings}
+              platforms={platforms}
               onSaveHistory={handleSaveHistory}
               initialData={initialFreightData}
+              onOpenPlatformSettings={() => setShowPlatformSettings(true)}
             />
           )}
           {mode === 'ml' && (
@@ -194,12 +224,20 @@ export default function App() {
         </main>
       </div>
 
-      {/* Modal de Configurações */}
+      {/* Modal de Configurações do Veículo */}
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         settings={settings}
         onSave={handleSaveSettings}
+      />
+
+      {/* Modal de Configurações de Plataformas */}
+      <PlatformSettingsModal
+        isOpen={showPlatformSettings}
+        onClose={() => setShowPlatformSettings(false)}
+        platforms={platforms}
+        onSavePlatforms={handleSavePlatforms}
       />
 
       {/* Toast Notification */}

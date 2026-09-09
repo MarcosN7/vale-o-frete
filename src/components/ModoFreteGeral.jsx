@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ResultDisplay from './ResultDisplay';
+import PlatformComparison from './PlatformComparison';
 import {
   calculateFuelCost,
   calculateMaintenanceCost,
@@ -7,15 +8,26 @@ import {
   calculateDepreciationCost,
   calculateOtherCostPerKm,
   calculateTotalCost,
+  calculatePlatformFee,
   calculateProfit,
   calculateRevenuePerKm,
   calculateCostPerKm,
   calculateProfitPerKm,
   calculateMargin,
   evaluateFreight,
+  formatPercent,
+  formatBRL,
+  DEFAULT_PLATFORMS,
 } from '../utils';
 
-export default function ModoFreteGeral({ settings, onSaveHistory, initialData, onCalculationChange }) {
+export default function ModoFreteGeral({
+  settings,
+  platforms = DEFAULT_PLATFORMS,
+  onSaveHistory,
+  initialData,
+  onCalculationChange,
+  onOpenPlatformSettings,
+}) {
   const [origem, setOrigem] = useState('');
   const [destino, setDestino] = useState('');
   const [valorFrete, setValorFrete] = useState('');
@@ -24,6 +36,15 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
   const [isRetornoVazio, setIsRetornoVazio] = useState(false);
   const [pedagios, setPedagios] = useState('');
   
+  // Plataforma selecionada
+  const [selectedPlatformId, setSelectedPlatformId] = useState('indrive');
+  const [isOverridingFee, setIsOverridingFee] = useState(false);
+  const [overridePercentage, setOverridePercentage] = useState('');
+  const [overrideFixedFee, setOverrideFixedFee] = useState('');
+
+  // Comparador de plataformas modal/toggle
+  const [showComparison, setShowComparison] = useState(false);
+
   // Modo de visualização de custos: rápido (padrão) ou completo
   const [calcLevel, setCalcLevel] = useState('rapido'); // rapido | completo
 
@@ -44,6 +65,9 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
       setIsRetornoVazio(Boolean(initialData.isRetornoVazio));
       setDistanciaRetorno(initialData.distanciaRetorno ? String(initialData.distanciaRetorno) : '');
       setPedagios(initialData.pedagios ? String(initialData.pedagios) : '');
+      if (initialData.platformId) {
+        setSelectedPlatformId(initialData.platformId);
+      }
       setShowResult(true);
       setSaved(false);
     }
@@ -67,6 +91,14 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
   const pedagiosNum = parseFloat(pedagios) || 0;
   const extrasNum = (parseFloat(alimentacaoHospedagem) || 0) + (parseFloat(outrosCustosViagem) || 0);
 
+  // Obter configuração da plataforma ativa
+  const basePlatform = platforms.find(p => p.id === selectedPlatformId) || platforms[0] || DEFAULT_PLATFORMS[0];
+  const activePlatformConfig = {
+    ...basePlatform,
+    percentage: isOverridingFee && overridePercentage !== '' ? parseFloat(overridePercentage) : basePlatform.percentage,
+    fixedFee: isOverridingFee && overrideFixedFee !== '' ? parseFloat(overrideFixedFee) : basePlatform.fixedFee,
+  };
+
   // Combustível
   const tipoComb = settings?.tipoCombustivel || 'diesel';
   const precoComb = tipoComb === 'diesel'
@@ -79,7 +111,11 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
 
   const canCalc = freteNum > 0 && idaNum > 0 && consumo > 0;
 
-  // Cálculo financeiro completo
+  // 1. Taxa da Plataforma
+  const platformFeeResult = calculatePlatformFee(freteNum, activePlatformConfig);
+  const netRevenue = platformFeeResult.netRevenue;
+
+  // 2. Custos da Viagem
   const fuelResult = calculateFuelCost(distanciaTotal, consumo, precoComb);
   const custoManutencao = calculateMaintenanceCost(distanciaTotal, settings?.manutencaoKm || 0);
   const custoPneus = calculateTireCost(distanciaTotal, settings?.pneusKm || 0);
@@ -96,7 +132,8 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
     custosExtras: extrasNum,
   });
 
-  const lucro = calculateProfit(freteNum, custoTotal);
+  // 3. Lucro Real e Margem (Lucro Real = Receita Líquida - Custos da Viagem)
+  const lucro = calculateProfit(netRevenue, custoTotal);
   const receitaPorKm = calculateRevenuePerKm(freteNum, distanciaTotal);
   const custoPorKm = calculateCostPerKm(custoTotal, distanciaTotal);
   const lucroPorKm = calculateProfitPerKm(lucro, distanciaTotal);
@@ -139,6 +176,14 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
         distanciaRetorno: voltaNum,
         isRetornoVazio,
         pedagios: pedagiosNum,
+        platformId: activePlatformConfig.id,
+        platformName: activePlatformConfig.name,
+        platformFeePercentage: activePlatformConfig.percentage,
+        platformFixedFee: activePlatformConfig.fixedFee,
+        platformPeriodFee: activePlatformConfig.periodFee,
+        totalPlatformFees: platformFeeResult.totalPlatformFee,
+        netRevenue,
+        effectiveRate: platformFeeResult.effectiveRate,
         custoTotal,
         lucro,
         margem,
@@ -163,7 +208,11 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
     setPedagios('');
     setAlimentacaoHospedagem('');
     setOutrosCustosViagem('');
+    setIsOverridingFee(false);
+    setOverridePercentage('');
+    setOverrideFixedFee('');
     setShowResult(false);
+    setShowComparison(false);
     setSaved(false);
     if (onCalculationChange) onCalculationChange(false);
   };
@@ -174,11 +223,11 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
       <div className="dashboard-col-left">
         {!settings?.consumoCombustivel && !settings?.consumoGasolina && (
           <div className="stale-banner" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1e40af' }}>
-            ℹ️ Usando parâmetros médios. Ajuste seu veículo no ícone ⚙️ no topo para máxima precisão.
+            ℹ️ Usando parâmetros médios do veículo. Ajuste em ⚙️ no topo para máxima precisão.
           </div>
         )}
 
-        {/* Passo 01: O Frete */}
+        {/* Passo 01: O Frete & Plataforma */}
         <div className="card">
           <div className="card-header-step">
             <span className="step-num">01</span>
@@ -218,6 +267,96 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
               value={valorFrete}
               onChange={e => { setValorFrete(e.target.value); setShowResult(false); setSaved(false); }}
             />
+          </div>
+
+          {/* Seleção da Plataforma */}
+          <div className="field" style={{ background: 'var(--surface-hover)', padding: '12px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label style={{ margin: 0, fontWeight: 700, color: 'var(--brand-dark)' }}>
+                🏢 Onde você conseguiu esse frete?
+              </label>
+              {onOpenPlatformSettings && (
+                <button
+                  type="button"
+                  onClick={onOpenPlatformSettings}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.75rem', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' }}
+                >
+                  Gerenciar plataformas
+                </button>
+              )}
+            </div>
+
+            <select
+              value={selectedPlatformId}
+              onChange={e => {
+                setSelectedPlatformId(e.target.value);
+                setIsOverridingFee(false);
+                setShowResult(false);
+                setSaved(false);
+              }}
+            >
+              {platforms.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.icon || '📱'} {p.name} {p.feeType === 'sem_taxa' ? '(0%)' : p.feeType === 'percentage' ? `(${p.percentage}%)` : ''}
+                </option>
+              ))}
+            </select>
+
+            {/* Resumo da Taxa e Opção de Ajuste Local */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, fontSize: '0.78rem' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>
+                Taxa ativa: <strong style={{ color: 'var(--primary)' }}>
+                  {activePlatformConfig.feeType === 'sem_taxa'
+                    ? 'Sem taxa (0%)'
+                    : activePlatformConfig.feeType === 'percentage'
+                    ? `${formatPercent(activePlatformConfig.percentage)} comissão`
+                    : activePlatformConfig.feeType === 'fixed'
+                    ? `${formatBRL(activePlatformConfig.fixedFee)} fixa`
+                    : 'Personalizada'}
+                </strong>
+              </span>
+
+              {activePlatformConfig.feeType !== 'sem_taxa' && (
+                <button
+                  type="button"
+                  onClick={() => setIsOverridingFee(!isOverridingFee)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  {isOverridingFee ? '✕ Cancelar edição' : '✏️ Editar taxa neste frete'}
+                </button>
+              )}
+            </div>
+
+            {/* Inputs de Ajuste Local da Taxa */}
+            {isOverridingFee && (
+              <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
+                <div className="field-row" style={{ marginBottom: 0 }}>
+                  <div className="field" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '0.75rem' }}>Comissão neste frete (%)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      placeholder={String(basePlatform.percentage || 0)}
+                      value={overridePercentage}
+                      onChange={e => { setOverridePercentage(e.target.value); setShowResult(false); setSaved(false); }}
+                    />
+                  </div>
+                  <div className="field" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '0.75rem' }}>Taxa fixa (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder={String(basePlatform.fixedFee || 0)}
+                      value={overrideFixedFee}
+                      onChange={e => { setOverrideFixedFee(e.target.value); setShowResult(false); setSaved(false); }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Distância de Ida */}
@@ -381,7 +520,7 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
         </div>
       </div>
 
-      {/* Coluna Direita: Resultado em Destaque */}
+      {/* Coluna Direita: Resultado em Destaque & Comparação */}
       {showResult && canCalc && (
         <div className="dashboard-col-right">
           <ResultDisplay
@@ -396,6 +535,8 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
             pedagios={pedagiosNum}
             settings={settings}
             mode="frete"
+            platformData={activePlatformConfig}
+            onOpenComparison={() => setShowComparison(!showComparison)}
             financials={{
               fuelCost: fuelResult.custo,
               fuelLitros: fuelResult.litros,
@@ -410,8 +551,24 @@ export default function ModoFreteGeral({ settings, onSaveHistory, initialData, o
               lucroPorKm,
               margem,
               verdict,
+              platformFeeResult,
             }}
           />
+
+          {showComparison && (
+            <PlatformComparison
+              valorFrete={freteNum}
+              distanciaTotal={distanciaTotal}
+              custoTotal={custoTotal}
+              platforms={platforms}
+              onSelectPlatform={(pId) => {
+                setSelectedPlatformId(pId);
+                setIsOverridingFee(false);
+              }}
+              onClose={() => setShowComparison(false)}
+            />
+          )}
+
           <button
             type="button"
             className="save-history-btn"
