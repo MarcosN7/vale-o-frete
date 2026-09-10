@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import ResultDisplay from './ResultDisplay';
+import ResultDisplay, { ResultPlaceholder } from './ResultDisplay';
 import PlatformComparison from './PlatformComparison';
 import {
   calculateFuelCost,
@@ -21,6 +21,8 @@ import {
 } from '../utils';
 
 export default function ModoFreteGeral({
+  introduction,
+  calculatorTools,
   settings,
   platforms = DEFAULT_PLATFORMS,
   onSaveHistory,
@@ -35,7 +37,7 @@ export default function ModoFreteGeral({
   const [distanciaRetorno, setDistanciaRetorno] = useState('');
   const [isRetornoVazio, setIsRetornoVazio] = useState(false);
   const [pedagios, setPedagios] = useState('');
-  
+
   // Plataforma selecionada
   const [selectedPlatformId, setSelectedPlatformId] = useState('indrive');
   const [isOverridingFee, setIsOverridingFee] = useState(false);
@@ -43,7 +45,7 @@ export default function ModoFreteGeral({
   const [overrideFixedFee, setOverrideFixedFee] = useState('');
 
   // Comparador de plataformas modal/toggle
-  const [showComparison, setShowComparison] = useState(false);
+  const [showComparison, setShowComparison] = useState(true);
 
   // Modo de visualização de custos: rápido (padrão) ou completo
   const [calcLevel, setCalcLevel] = useState('rapido'); // rapido | completo
@@ -241,12 +243,14 @@ export default function ModoFreteGeral({
   };
 
   return (
-    <div className={`dashboard-grid ${showResult && canCalc ? 'has-result' : ''}`}>
+    <div className={`dashboard-grid landing-grid ${showResult && canCalc ? 'has-result' : ''}`}>
       {/* Coluna Esquerda: Formulário Estruturado em Passos */}
-      <div className="dashboard-col-left">
+      {introduction}
+      <div className="dashboard-col-left" id="calculadora" aria-labelledby="calculator-title">
+        {calculatorTools}
         {!settings?.consumoCombustivel && !settings?.consumoGasolina && (
           <div className="stale-banner" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1e40af' }}>
-            ℹ️ Usando parâmetros médios do veículo. Ajuste em ⚙️ no topo para máxima precisão.
+             Usando parâmetros médios do veículo. Ajuste em Meu Veículo no topo para máxima precisão.
           </div>
         )}
 
@@ -257,32 +261,10 @@ export default function ModoFreteGeral({
             <h3 className="step-title">Informações do Frete</h3>
           </div>
 
-          {/* Origem e Destino */}
-          <div className="field-row">
-            <div className="field">
-              <label>Origem <span className="hint">(opcional)</span></label>
-              <input
-                type="text"
-                placeholder="Ex: São Paulo - SP"
-                value={origem}
-                onChange={e => { setOrigem(e.target.value); setShowResult(false); setSaved(false); }}
-              />
-            </div>
-            <div className="field">
-              <label>Destino <span className="hint">(opcional)</span></label>
-              <input
-                type="text"
-                placeholder="Ex: Curitiba - PR"
-                value={destino}
-                onChange={e => { setDestino(e.target.value); setShowResult(false); setSaved(false); }}
-              />
-            </div>
-          </div>
-
           {/* Valor do Frete */}
           <div className="field" id="tour-valor-frete">
-            <label>💰 Valor Bruto do Frete (R$)</label>
-            <input
+            <label htmlFor="modofretegeral-field-3"> Valor Bruto do Frete (R$)</label>
+            <input id="modofretegeral-field-3"
               type="number"
               step="0.01"
               min="0"
@@ -295,8 +277,8 @@ export default function ModoFreteGeral({
           {/* Seleção da Plataforma */}
           <div className="field" id="tour-plataforma" style={{ background: 'var(--surface-hover)', padding: '12px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label style={{ margin: 0, fontWeight: 700, color: 'var(--brand-dark)' }}>
-                🏢 Onde você conseguiu esse frete?
+              <label htmlFor="freight-platform" style={{ margin: 0, fontWeight: 700, color: 'var(--brand-dark)' }}>
+                 Onde você conseguiu esse frete?
               </label>
               {onOpenPlatformSettings && (
                 <button
@@ -309,7 +291,7 @@ export default function ModoFreteGeral({
               )}
             </div>
 
-            <select
+            <select id="freight-platform"
               value={selectedPlatformId}
               onChange={e => {
                 setSelectedPlatformId(e.target.value);
@@ -320,7 +302,7 @@ export default function ModoFreteGeral({
             >
               {platforms.map(p => (
                 <option key={p.id} value={p.id}>
-                  {p.icon || '📱'} {p.name} {p.feeType === 'sem_taxa' ? '(0%)' : p.feeType === 'percentage' ? `(${p.percentage}%)` : ''}
+                  {p.name} {p.feeType === 'sem_taxa' ? '(0%)' : p.feeType === 'percentage' ? `(${p.percentage}%)` : ''}
                 </option>
               ))}
             </select>
@@ -345,7 +327,7 @@ export default function ModoFreteGeral({
                   onClick={() => setIsOverridingFee(!isOverridingFee)}
                   style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
                 >
-                  {isOverridingFee ? '✕ Cancelar edição' : '✏️ Editar taxa neste frete'}
+                  {isOverridingFee ? '✕ Cancelar edição' : ' Editar taxa neste frete'}
                 </button>
               )}
             </div>
@@ -355,8 +337,8 @@ export default function ModoFreteGeral({
               <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
                 <div className="field-row" style={{ marginBottom: 0 }}>
                   <div className="field" style={{ marginBottom: 0 }}>
-                    <label style={{ fontSize: '0.75rem' }}>Comissão neste frete (%)</label>
-                    <input
+                    <label style={{ fontSize: '0.75rem' }} htmlFor="modofretegeral-field-4">Comissão neste frete (%)</label>
+                    <input id="modofretegeral-field-4"
                       type="number"
                       step="0.01"
                       min="0"
@@ -367,8 +349,8 @@ export default function ModoFreteGeral({
                     />
                   </div>
                   <div className="field" style={{ marginBottom: 0 }}>
-                    <label style={{ fontSize: '0.75rem' }}>Taxa fixa (R$)</label>
-                    <input
+                    <label style={{ fontSize: '0.75rem' }} htmlFor="modofretegeral-field-5">Taxa fixa (R$)</label>
+                    <input id="modofretegeral-field-5"
                       type="number"
                       step="0.01"
                       min="0"
@@ -386,8 +368,8 @@ export default function ModoFreteGeral({
           <div id="tour-distancia-retorno">
             {/* Distância de Ida */}
             <div className="field">
-              <label>📏 Distância de Ida (km)</label>
-              <input
+              <label htmlFor="modofretegeral-field-6"> Distância de Ida (km)</label>
+              <input id="modofretegeral-field-6"
                 type="number"
                 step="1"
                 min="0"
@@ -408,7 +390,7 @@ export default function ModoFreteGeral({
             <div className={`retorno-vazio-card ${isRetornoVazio ? 'active' : ''}`}>
               <label className="retorno-header">
                 <span className="retorno-title">
-                  <span>🔄</span>
+
                   <span>Considerar Retorno Vazio?</span>
                 </span>
                 <input
@@ -422,10 +404,10 @@ export default function ModoFreteGeral({
               {isRetornoVazio && (
                 <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--danger-border)' }}>
                   <div className="field" style={{ marginBottom: 6 }}>
-                    <label style={{ color: 'var(--danger-text)', fontSize: '0.8rem' }}>
+                    <label style={{ color: 'var(--danger-text)', fontSize: '0.8rem' }} htmlFor="modofretegeral-field-7">
                       Distância do Retorno (km):
                     </label>
-                    <input
+                    <input id="modofretegeral-field-7"
                       type="number"
                       step="1"
                       min="0"
@@ -435,7 +417,7 @@ export default function ModoFreteGeral({
                     />
                   </div>
                   <p className="retorno-badge-alert" style={{ margin: 0 }}>
-                    ⚠️ O cálculo considerará {voltaNum} km de volta sem receita, impactando seu custo por km real.
+                     O cálculo considerará {voltaNum} km de volta sem receita, impactando seu custo por km real.
                   </p>
                 </div>
               )}
@@ -445,7 +427,7 @@ export default function ModoFreteGeral({
           {/* Resumo da Distância Total Considerada */}
           {distanciaTotal > 0 && (
             <div className="distance-summary">
-              <span className="ds-label">🏁 Distância Total a Rodar:</span>
+              <span className="ds-label"> Distância Total a Rodar:</span>
               <span className="ds-value">
                 {distanciaTotal.toFixed(0)} km
                 {isRetornoVazio && (
@@ -456,17 +438,38 @@ export default function ModoFreteGeral({
           )}
         </div>
 
-        {/* Passo 02: Despesas e Custos */}
-        <div className="card" id="tour-despesas">
-          <div className="card-header-step">
-            <span className="step-num">02</span>
-            <h3 className="step-title">Despesas da Viagem</h3>
+        <details className="route-details"><summary>Origem e destino (opcional)</summary>
+          {/* Origem e Destino */}
+          <div className="field-row">
+            <div className="field">
+              <label htmlFor="modofretegeral-field-1">Origem <span className="hint">(opcional)</span></label>
+              <input id="modofretegeral-field-1"
+                type="text"
+                placeholder="Ex: São Paulo - SP"
+                value={origem}
+                onChange={e => { setOrigem(e.target.value); setShowResult(false); setSaved(false); }}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="modofretegeral-field-2">Destino <span className="hint">(opcional)</span></label>
+              <input id="modofretegeral-field-2"
+                type="text"
+                placeholder="Ex: Curitiba - PR"
+                value={destino}
+                onChange={e => { setDestino(e.target.value); setShowResult(false); setSaved(false); }}
+              />
+            </div>
           </div>
 
+        </details>
+
+        {/* Passo 02: Despesas e Custos */}
+        <details className="trip-expenses" id="tour-despesas">
+          <summary>Pedágios e outras despesas</summary>
           {/* Pedágios */}
           <div className="field">
-            <label>🛣️ Pedágios Previstos (R$) <span className="hint">(opcional)</span></label>
-            <input
+            <label htmlFor="modofretegeral-field-8"> Pedágios Previstos (R$) <span className="hint">(opcional)</span></label>
+            <input id="modofretegeral-field-8"
               type="number"
               step="0.01"
               min="0"
@@ -487,15 +490,15 @@ export default function ModoFreteGeral({
                 onClick={() => setCalcLevel(prev => prev === 'rapido' ? 'completo' : 'rapido')}
                 style={{ padding: '5px 12px', fontSize: '0.78rem', background: calcLevel === 'completo' ? 'var(--primary-light)' : 'var(--surface-hover)', color: 'var(--primary)', border: '1px solid var(--primary-border)', borderRadius: 6, fontWeight: 700 }}
               >
-                {calcLevel === 'completo' ? '➖ Ocultar Extras' : '➕ Adicionar Diárias / Alimentação'}
+                {calcLevel === 'completo' ? ' Ocultar Extras' : ' Adicionar Diárias / Alimentação'}
               </button>
             </div>
 
             {calcLevel === 'completo' && (
               <div style={{ background: 'var(--surface-hover)', padding: '14px', borderRadius: 'var(--radius-sm)', marginTop: 12 }}>
                 <div className="field">
-                  <label>🍲 Alimentação & Hospedagem (R$)</label>
-                  <input
+                  <label htmlFor="modofretegeral-field-9"> Alimentação & Hospedagem (R$)</label>
+                  <input id="modofretegeral-field-9"
                     type="number"
                     step="0.01"
                     min="0"
@@ -505,8 +508,8 @@ export default function ModoFreteGeral({
                   />
                 </div>
                 <div className="field" style={{ marginBottom: 0 }}>
-                  <label>📦 Outros Gastos <span className="hint">(ajudante, carga/descarga)</span></label>
-                  <input
+                  <label htmlFor="modofretegeral-field-10"> Outros Gastos <span className="hint">(ajudante, carga/descarga)</span></label>
+                  <input id="modofretegeral-field-10"
                     type="number"
                     step="0.01"
                     min="0"
@@ -518,7 +521,7 @@ export default function ModoFreteGeral({
               </div>
             )}
           </div>
-        </div>
+        </details>
 
         {/* CTA Principal */}
         <div style={{ display: 'flex', gap: 12 }} id="tour-calc-btn">
@@ -529,8 +532,8 @@ export default function ModoFreteGeral({
             disabled={!canCalc}
             onClick={handleCalc}
           >
-            <span>⚡</span>
-            <span>{showResult ? 'RECALCULAR FRETE' : 'CALCULAR SE VALE A PENA'}</span>
+
+            <span>{showResult ? 'Recalcular frete' : 'Calcular lucro real'}</span>
           </button>
           {showResult && (
             <button
@@ -539,14 +542,13 @@ export default function ModoFreteGeral({
               style={{ width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', padding: 0 }}
               onClick={handleReset}
               title="Limpar formulário"
-            >
-              🔄
-            </button>
+            >↺</button>
           )}
         </div>
       </div>
 
       {/* Coluna Direita: Resultado em Destaque & Comparação */}
+      {!(showResult && canCalc) && <div className="dashboard-col-right"><ResultPlaceholder /></div>}
       {showResult && canCalc && (
         <div className="dashboard-col-right">
           <ResultDisplay
@@ -562,7 +564,7 @@ export default function ModoFreteGeral({
             settings={settings}
             mode="frete"
             platformData={activePlatformConfig}
-            onOpenComparison={() => setShowComparison(!showComparison)}
+            onOpenComparison={() => { setShowComparison(true); requestAnimationFrame(() => document.getElementById('comparar')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}
             financials={{
               fuelCost: fuelResult.custo,
               fuelLitros: fuelResult.litros,
@@ -581,8 +583,23 @@ export default function ModoFreteGeral({
             }}
           />
 
-          {showComparison && (
+
+
+          <button
+            type="button"
+            className="save-history-btn"
+            onClick={handleSaveToHistory}
+            disabled={saved}
+          >
+            {saved ? '✓ Salvo nos Meus Fretes' : ' Salvar no Histórico'}
+          </button>
+        </div>
+      )}
+      <section id="comparar" className="comparison-area">
+                  {showComparison && (
             <PlatformComparison
+              onOpenPlatformSettings={onOpenPlatformSettings}
+              pending={!(showResult && canCalc)}
               valorFrete={freteNum}
               distanciaTotal={distanciaTotal}
               custoTotal={custoTotal}
@@ -594,17 +611,11 @@ export default function ModoFreteGeral({
               onClose={() => setShowComparison(false)}
             />
           )}
-
-          <button
-            type="button"
-            className="save-history-btn"
-            onClick={handleSaveToHistory}
-            disabled={saved}
-          >
-            {saved ? '✓ Salvo nos Meus Fretes' : '📋 Salvar no Histórico'}
-          </button>
-        </div>
-      )}
+        {!showComparison && <div className="comparison-prompt">
+          <div><h2>Compare as plataformas</h2><p>{showResult && canCalc ? 'Veja quanto sobra em cada plataforma para esta viagem.' : 'Calcule uma viagem para comparar Uber, 99, inDrive, Lalamove e suas plataformas personalizadas.'}</p></div>
+          {showResult && canCalc ? <button className="btn-secondary" onClick={() => setShowComparison(true)}>Comparar resultados</button> : <a href="#tour-valor-frete">Preencher viagem →</a>}
+        </div>}
+      </section>
     </div>
   );
 }

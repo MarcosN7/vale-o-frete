@@ -113,7 +113,7 @@ export default function App() {
     if (entry.mode === 'frete') {
       setMode('frete');
       setInitialFreightData({ ...entry });
-      window.scrollTo({ top: 120, behavior: 'smooth' });
+      document.getElementById('calculadora')?.scrollIntoView({ behavior: 'smooth' });
     } else if (entry.mode === 'ml') {
       setMode('ml');
     } else if (entry.mode === 'lalamove') {
@@ -124,24 +124,56 @@ export default function App() {
 
   const handleStartFirstCalc = () => {
     setMode('frete');
-    window.scrollTo({ top: 100, behavior: 'smooth' });
+    document.getElementById('calculadora')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const introduction = (
+    <section className="hero-section" id="inicio">
+      <p className="hero-eyebrow">Mais do que corridas, melhores escolhas</p>
+      <h1 className="hero-title">Descubra se a corrida <span>realmente vale a pena</span></h1>
+      <p className="hero-subtitle">
+        Calcule o lucro real das suas corridas, considerando combustível, taxas, pedágios e outros custos.
+        Tome decisões com mais segurança e dirija com mais tranquilidade.
+      </p>
+      <div className="hero-buttons">
+        <a className="btn-primary hero-cta" href="#calculadora">Simular agora <span aria-hidden="true">→</span></a>
+        <button className="btn-secondary" onClick={() => { setMode('frete'); setShowTour(true); }}>Ver como funciona</button>
+      </div>
+      <div className="hero-facts">
+        <div><strong>Seu lucro real</strong><span>em cada corrida</span></div>
+        <div><strong>Mais clareza</strong><span>nas decisões</span></div>
+        <div><strong>Sem cadastro</strong><span>direto no navegador</span></div>
+      </div>
+    </section>
+  );
+
+  const calculatorTools = (
+    <>
+      <div className="calculator-heading"><h2 id="calculator-title">Calculadora de corrida</h2><p>Preencha os dados para ver o resultado real.</p></div>
+      <div className="mode-tabs-wrapper">
+        <div className="mode-tabs" aria-label="Tipo de serviço">
+          <button type="button" className={mode === 'frete' ? 'active' : ''} aria-pressed={mode === 'frete'} onClick={() => { setMode('frete'); setInitialFreightData(null); }}>Frete geral</button>
+          <button type="button" className={mode === 'ml' ? 'active' : ''} aria-pressed={mode === 'ml'} onClick={() => setMode('ml')}>Mercado Livre</button>
+          <button type="button" className={mode === 'lalamove' ? 'active' : ''} aria-pressed={mode === 'lalamove'} onClick={() => setMode('lalamove')}>Lalamove / inDrive</button>
+        </div>
+      </div>
+      <FuelBanner settings={settings} onOpenSettings={() => setShowSettings(true)} />
+    </>
+  );
 
   return (
     <>
       {/* Header SaaS */}
+      <a className="skip-link" href="#calculadora">Pular para a calculadora</a>
       <header className="app-header">
         <div className="header-content">
-          <div className="logo-wrapper">
-            <div className="logo-icon">🚚</div>
-            <div className="logo-text">
-              <h1>
-                <span>Vale o Frete?</span>
-                <span className="logo-badge">PRO</span>
-              </h1>
-              <p>Análise financeira de fretes</p>
-            </div>
-          </div>
+          <a className="logo-wrapper" href="#inicio"><svg className="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M5 5h22a3 3 0 0 1 2.2 5L18 22a3 3 0 0 1-4.5 0L2.8 10A3 3 0 0 1 5 5Z" fill="#0664ff"/><path d="m14 28 6 6L35 13" stroke="#079653" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/></svg>Vale o Frete</a>
+          <nav className="header-nav" aria-label="Navegação principal">
+            <a href="#calculadora">Calculadora</a>
+            <a href="#comparar" onClick={() => setMode('frete')}>Comparar</a>
+            <a href="#como-funciona">Como funciona</a>
+            <a href="#sobre">Sobre</a>
+          </nav>
 
           <div className="header-actions">
             <button
@@ -150,7 +182,7 @@ export default function App() {
               onClick={() => setShowPlatformSettings(true)}
               title="Configurar taxas de plataformas"
             >
-              <span>🏢</span>
+
               <span className="gear-text">Plataformas</span>
             </button>
             <button
@@ -159,7 +191,7 @@ export default function App() {
               onClick={() => setShowSettings(true)}
               title="Configurar veículo e custos operacionais"
             >
-              <span>⚙️</span>
+
               <span className="gear-text">Meu Veículo</span>
             </button>
           </div>
@@ -167,51 +199,14 @@ export default function App() {
       </header>
 
       {/* Barra de Status do Veículo */}
-      <FuelBanner settings={settings} onOpenSettings={() => setShowSettings(true)} />
 
       <div className="app-container">
-        {/* Hero Section */}
-        <section className="hero-section">
-          <h2 className="hero-title">Vale a pena aceitar esse frete?</h2>
-          <p className="hero-subtitle">
-            Calcule taxas de plataformas, consumo e retorno vazio para saber exatamente quanto sobra para você.
-          </p>
-        </section>
-
-        {/* Seletor de Modo SaaS */}
-        <div className="mode-tabs-wrapper">
-          <div className="mode-tabs">
-            <button
-              type="button"
-              className={mode === 'frete' ? 'active' : ''}
-              onClick={() => { setMode('frete'); setInitialFreightData(null); }}
-            >
-              <span>🚛</span>
-              <span>Viagem / Frete Geral</span>
-            </button>
-            <button
-              type="button"
-              className={mode === 'ml' ? 'active' : ''}
-              onClick={() => setMode('ml')}
-            >
-              <span>📦</span>
-              <span>Mercado Livre Flex</span>
-            </button>
-            <button
-              type="button"
-              className={mode === 'lalamove' ? 'active' : ''}
-              onClick={() => setMode('lalamove')}
-            >
-              <span>🏍️</span>
-              <span>LalaMove / inDrive</span>
-            </button>
-          </div>
-        </div>
-
         {/* Conteúdo Principal */}
         <main className="main-content">
           {mode === 'frete' && (
             <ModoFreteGeral
+              introduction={introduction}
+              calculatorTools={calculatorTools}
               settings={settings}
               platforms={platforms}
               onSaveHistory={handleSaveHistory}
@@ -221,17 +216,30 @@ export default function App() {
           )}
           {mode === 'ml' && (
             <ModoML
+              introduction={introduction}
+              calculatorTools={calculatorTools}
               settings={settings}
               onSaveHistory={handleSaveHistory}
             />
           )}
           {mode === 'lalamove' && (
             <ModoLalamove
+              introduction={introduction}
+              calculatorTools={calculatorTools}
               settings={settings}
               onSaveHistory={handleSaveHistory}
             />
           )}
 
+        </main>
+        <section id="como-funciona" className="info-section" aria-labelledby="how-title">
+          <div className="section-heading"><h2 id="how-title">Como funciona</h2><button className="text-button" onClick={() => { setMode('frete'); setShowTour(true); }}>Abrir tutorial</button></div>
+          <ol className="how-steps">
+            <li><h3>Configure seu veículo</h3><p>Informe o consumo, o preço do combustível e os custos por quilômetro.</p></li>
+            <li><h3>Preencha a viagem</h3><p>Inclua valor, distância, plataforma e despesas. Considere a volta sem carga, se houver.</p></li>
+            <li><h3>Veja o que sobra</h3><p>Confira o lucro real, compare as taxas e salve a simulação no histórico.</p></li>
+          </ol>
+        </section>
           {/* Histórico SaaS */}
           <History
             history={history}
@@ -240,7 +248,10 @@ export default function App() {
             onDeleteItem={handleDeleteHistoryItem}
             onStartFirstCalc={handleStartFirstCalc}
           />
-        </main>
+        <footer id="sobre" className="site-footer">
+          <div><strong>Vale o Frete</strong><p>Mais clareza para decidir sua próxima corrida.</p></div>
+          <p>Simulações com os custos que você informa.<br />Configurações e histórico salvos neste navegador.</p>
+        </footer>
       </div>
 
       {/* Modal de Configurações do Veículo */}
@@ -249,7 +260,7 @@ export default function App() {
         onClose={() => setShowSettings(false)}
         settings={settings}
         onSave={handleSaveSettings}
-        onRestartTour={() => setShowTour(true)}
+        onRestartTour={() => { setMode('frete'); setShowTour(true); }}
       />
 
       {/* Modal de Configurações de Plataformas */}
@@ -268,7 +279,7 @@ export default function App() {
 
       {/* Toast Notification */}
       {toastMsg && (
-        <div className="toast-notification">
+        <div className="toast-notification" role="status">
           <span>{toastMsg}</span>
         </div>
       )}

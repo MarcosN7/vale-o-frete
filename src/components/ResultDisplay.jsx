@@ -7,6 +7,27 @@ import {
   DEFAULT_THRESHOLDS,
 } from '../utils';
 
+export function ResultPlaceholder() {
+  return (
+    <section className="result-card-container result-placeholder" aria-labelledby="pending-result-title">
+      <div className="result-heading"><h2 id="pending-result-title">Resultado da corrida</h2><p>Veja quanto realmente sobra no seu bolso.</p></div>
+      <div className="verdict-hero-card profit-positive">
+        <div className="verdict-profit-label">Lucro real</div>
+        <div className="verdict-profit-value positive">R$ —</div>
+        <p className="verdict-explanation">Preencha a corrida e calcule para ver seu lucro.</p>
+      </div>
+      <div className="kpi-grid">
+        <div className="kpi-card"><span className="kpi-label">Custo total da viagem</span><strong className="kpi-value">R$ —</strong></div>
+        <div className="kpi-card"><span className="kpi-label">Lucro por km</span><strong className="kpi-value">R$ —</strong></div>
+      </div>
+      <div className="cost-breakdown-card"><h3 className="cost-breakdown-title">Detalhamento dos custos</h3><div className="cost-list">
+        {['Combustível', 'Taxa da plataforma', 'Pedágios', 'Outros custos'].map(label => <div className="cost-list-item" key={label}><span>{label}</span><span>—</span></div>)}
+      </div></div>
+      <p className="result-footnote">O resultado considera os dados informados e as configurações do seu veículo.</p>
+    </section>
+  );
+}
+
 export default function ResultDisplay({
   valor,
   distancia,
@@ -61,18 +82,18 @@ export default function ResultDisplay({
     const pExtras = (((custosExtras || 0) + custoOutrosKm) / totalCostForBar * 100).toFixed(1);
 
     const handleShareFreight = async () => {
-      const rotaStr = origem || destino ? `\n📍 ${origem || 'Origem'} ➔ ${destino || 'Destino'}` : '';
+      const rotaStr = origem || destino ? `\n ${origem || 'Origem'} ➔ ${destino || 'Destino'}` : '';
       const retornoStr = isRetornoVazio ? ' (com Retorno Vazio)' : '';
-      const platStr = platformData?.name ? `\n🏢 Plataforma: ${platformData.name} (-${formatBRL(totalPlatformFee)} / ${formatPercent(effectiveRate)})` : '';
+      const platStr = platformData?.name ? `\n Plataforma: ${platformData.name} (-${formatBRL(totalPlatformFee)} / ${formatPercent(effectiveRate)})` : '';
       const text =
-        `🚚 Vale o Frete? — Análise de Viagem${rotaStr}${platStr}\n` +
-        `📏 Distância: ${formatKm(distancia)}${retornoStr}\n` +
-        `💰 Frete Bruto: ${formatBRL(valor)}\n` +
-        `💵 Receita Líquida: ${formatBRL(netRevenue)}\n` +
-        `📉 Custos da Viagem: ${formatBRL(custoTotal)}\n` +
-        `💵 Lucro Real: ${formatBRL(lucro)} (${formatPercent(margem)})\n` +
-        `📊 Lucro/km: ${formatBRL(lucroPorKm)}/km | Custo: ${formatBRL(custoPorKm)}/km\n` +
-        `🏁 ${verdict.emoji} ${verdict.title} — ${verdict.message}`;
+        ` Vale o Frete? — Análise de Viagem${rotaStr}${platStr}\n` +
+        ` Distância: ${formatKm(distancia)}${retornoStr}\n` +
+        ` Frete Bruto: ${formatBRL(valor)}\n` +
+        ` Receita Líquida: ${formatBRL(netRevenue)}\n` +
+        ` Custos da Viagem: ${formatBRL(custoTotal)}\n` +
+        ` Lucro Real: ${formatBRL(lucro)} (${formatPercent(margem)})\n` +
+        ` Lucro/km: ${formatBRL(lucroPorKm)}/km | Custo: ${formatBRL(custoPorKm)}/km\n` +
+        ` ${verdict.emoji} ${verdict.title} — ${verdict.message}`;
 
       if (navigator.share) {
         try {
@@ -85,15 +106,16 @@ export default function ResultDisplay({
     };
 
     return (
-      <div className="result-card-container">
+      <div className="result-card-container" aria-live="polite">
+        <div className="result-heading"><h2>Resultado da corrida</h2><p>Veja quanto realmente sobra no seu bolso.</p></div>
         {/* Card do Veredito Principal */}
-        <div className={`verdict-hero-card ${verdict.status}`}>
+        <div className={`verdict-hero-card ${verdict.status} ${lucro >= 0 ? 'profit-positive' : 'profit-negative'}`}>
           <div className="verdict-badge">
-            <span>{verdict.emoji}</span>
+
             <span>{verdict.title}</span>
           </div>
 
-          <div className="verdict-profit-label">Seu Lucro Real Estimado</div>
+          <div className="verdict-profit-label">Lucro real estimado</div>
           <div className={`verdict-profit-value ${lucro >= 0 ? 'positive' : 'negative'}`}>
             {formatBRL(lucro)}
           </div>
@@ -107,13 +129,13 @@ export default function ResultDisplay({
 
           {isRetornoVazio && (
             <div className="retorno-badge-alert" style={{ marginTop: 8 }}>
-              ⚠️ Distância total de {formatKm(distancia)} computando ida + retorno vazio sem receita.
+               Distância total de {formatKm(distancia)} computando ida + retorno vazio sem receita.
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div className="result-actions">
             <button type="button" className="share-btn" style={{ flex: 1, marginTop: 0 }} onClick={handleShareFreight}>
-              📤 Compartilhar no WhatsApp
+               Compartilhar no WhatsApp
             </button>
             {onOpenComparison && (
               <button
@@ -123,7 +145,7 @@ export default function ResultDisplay({
                 onClick={onOpenComparison}
                 title="Comparar resultado em todas as plataformas"
               >
-                <span>📊</span>
+
                 <span>Comparar Plataformas</span>
               </button>
             )}
@@ -131,11 +153,11 @@ export default function ResultDisplay({
         </div>
 
         {/* 4 Indicadores Chave em Grade 2x2 */}
-        <div className="kpi-grid">
+        <div className="kpi-grid financial-kpis">
           <div className="kpi-card">
-            <span className="kpi-label">Lucro Real</span>
+            <span className="kpi-label">Lucro por km</span>
             <span className={`kpi-value ${lucro >= 0 ? 'positive' : 'negative'}`}>
-              {formatBRL(lucro)}
+              {formatBRL(lucroPorKm)}
             </span>
           </div>
           <div className="kpi-card">
@@ -151,7 +173,7 @@ export default function ResultDisplay({
             </span>
           </div>
           <div className="kpi-card">
-            <span className="kpi-label">Custos da Viagem</span>
+            <span className="kpi-label">Custo total da viagem</span>
             <span className="kpi-value negative">
               {formatBRL(custoTotal)}
             </span>
@@ -159,51 +181,51 @@ export default function ResultDisplay({
         </div>
 
         {/* Resumo Financeiro: Frete Bruto -> Plataforma -> Custos -> Lucro Real */}
-        <div className="card" style={{ padding: 18, marginBottom: 16 }}>
-          <div className="cost-breakdown-title" style={{ marginBottom: 12 }}>
+        <details className="financial-details">
+          <summary>
             <span>Fluxo Financeiro do Frete</span>
-          </div>
+          </summary>
 
           <div className="cost-list">
             <div className="cost-list-item">
-              <span style={{ color: 'var(--text-secondary)' }}>💰 Frete Bruto</span>
+              <span style={{ color: 'var(--text-secondary)' }}> Frete Bruto</span>
               <strong style={{ color: 'var(--brand-dark)' }}>{formatBRL(valor)}</strong>
             </div>
 
             {totalPlatformFee > 0 && (
               <div className="cost-list-item">
                 <span style={{ color: 'var(--danger-text)' }}>
-                  🏢 Taxas da Plataforma ({platformData?.name || 'Intermediação'})
+                   Taxas da Plataforma ({platformData?.name || 'Intermediação'})
                 </span>
                 <strong style={{ color: 'var(--danger-text)' }}>- {formatBRL(totalPlatformFee)}</strong>
               </div>
             )}
 
             <div className="cost-list-item" style={{ borderTop: '1px dashed var(--border)', paddingTop: 6 }}>
-              <span style={{ fontWeight: 700, color: 'var(--primary)' }}>💵 Receita Após Plataforma</span>
+              <span style={{ fontWeight: 700, color: 'var(--primary)' }}> Receita Após Plataforma</span>
               <strong style={{ color: 'var(--primary)' }}>{formatBRL(netRevenue)}</strong>
             </div>
 
             <div className="cost-list-item">
-              <span style={{ color: 'var(--text-secondary)' }}>🚚 Custos Operacionais da Viagem</span>
+              <span style={{ color: 'var(--text-secondary)' }}> Custos Operacionais da Viagem</span>
               <strong style={{ color: 'var(--danger-text)' }}>- {formatBRL(custoTotal)}</strong>
             </div>
 
             <div className="cost-list-item" style={{ borderTop: '1.5px solid var(--border)', paddingTop: 8, marginTop: 4 }}>
-              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--brand-dark)' }}>🏁 LUCRO REAL LÍQUIDO</span>
+              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--brand-dark)' }}> LUCRO REAL LÍQUIDO</span>
               <strong style={{ fontSize: '1.1rem', color: lucro >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 {formatBRL(lucro)}
               </strong>
             </div>
           </div>
-        </div>
+        </details>
 
         {/* Detalhamento das Taxas da Plataforma */}
         {platformData && platformData.feeType !== 'sem_taxa' && (
-          <div className="card" style={{ padding: 18, marginBottom: 16, background: '#fafcff', border: '1px solid var(--primary-border)' }}>
-            <div className="cost-breakdown-title" style={{ marginBottom: 10 }}>
-              <span>🏢 Detalhamento da Plataforma: {platformData.name}</span>
-            </div>
+          <details className="financial-details">
+            <summary>
+              <span> Detalhamento da Plataforma: {platformData.name}</span>
+            </summary>
 
             <div className="cost-list" style={{ fontSize: '0.85rem' }}>
               {platformFeeResult?.commissionFee > 0 && (
@@ -231,7 +253,7 @@ export default function ResultDisplay({
                 </span>
               </div>
             </div>
-          </div>
+          </details>
         )}
 
         {/* Distribuição Visual de Custos da Viagem */}
@@ -348,16 +370,16 @@ export default function ResultDisplay({
   const handleShare = async () => {
     const modeLabel = mode === 'ml' ? 'Mercado Livre Flex' : 'Lalamove / inDrive Fretes';
     const distDet = coletaNum > 0
-      ? `📏 ${distancia.toFixed(1)} km total (${coletaNum.toFixed(1)} km coleta + ${rotaNum.toFixed(1)} km rota)`
-      : `📏 ${distancia.toFixed(1)} km`;
+      ? ` ${distancia.toFixed(1)} km total (${coletaNum.toFixed(1)} km coleta + ${rotaNum.toFixed(1)} km rota)`
+      : ` ${distancia.toFixed(1)} km`;
 
     const text =
-      `🚚 Vale o Frete? — ${modeLabel}\n` +
+      ` Vale o Frete? — ${modeLabel}\n` +
       `${distDet}${paradas ? ` • ${paradas} paradas` : ''}\n` +
-      `💰 Valor: ${formatBRL(valor)}\n` +
-      `⛽ Combust.: ${formatBRL(fuelCost)}\n` +
-      `📊 Lucro: ${formatBRL(lucro)} (${formatPercent(margem)})\n` +
-      `🏁 ${verdict.emoji} ${verdict.text} (${formatBRL(reaisPorKm)}/km)`;
+      ` Valor: ${formatBRL(valor)}\n` +
+      ` Combust.: ${formatBRL(fuelCost)}\n` +
+      ` Lucro: ${formatBRL(lucro)} (${formatPercent(margem)})\n` +
+      ` ${verdict.emoji} ${verdict.text} (${formatBRL(reaisPorKm)}/km)`;
 
     if (navigator.share) {
       try {
@@ -370,13 +392,14 @@ export default function ResultDisplay({
   };
 
   return (
-    <div className="result-card-container">
-      <div className={`verdict-hero-card ${verdict.color === 'green' ? 'good' : verdict.color === 'yellow' ? 'warning' : 'bad'}`}>
+    <div className="result-card-container" aria-live="polite">
+      <div className="result-heading"><h2>Resultado da corrida</h2><p>Veja quanto realmente sobra no seu bolso.</p></div>
+      <div className={`verdict-hero-card ${verdict.color === 'green' ? 'good' : verdict.color === 'yellow' ? 'warning' : 'bad'} ${lucro >= 0 ? 'profit-positive' : 'profit-negative'}`}>
         <div className="verdict-badge">
-          <span>{verdict.emoji}</span>
+
           <span>{verdict.text}</span>
         </div>
-        <div className="verdict-profit-label">Lucro Líquido Estimado</div>
+        <div className="verdict-profit-label">Lucro real estimado</div>
         <div className={`verdict-profit-value ${lucro >= 0 ? 'positive' : 'negative'}`}>
           {formatBRL(lucro)}
         </div>
@@ -389,7 +412,7 @@ export default function ResultDisplay({
           </div>
         )}
         <button type="button" className="share-btn" onClick={handleShare}>
-          📤 Compartilhar no WhatsApp
+           Compartilhar no WhatsApp
         </button>
       </div>
 
@@ -411,6 +434,14 @@ export default function ResultDisplay({
         <div className="kpi-card">
           <span className="kpi-label">Distância Total</span>
           <span className="kpi-value">{formatKm(distancia)}</span>
+        </div>
+      </div>
+      <div className="cost-breakdown-card">
+        <h3 className="cost-breakdown-title">Detalhamento dos custos</h3>
+        <div className="cost-list">
+          <div className="cost-list-item"><span>Combustível ({fuelLitros.toFixed(1)} L)</span><strong>{formatBRL(fuelCost)}</strong></div>
+          <div className="cost-list-item"><span>Pedágios e outros custos</span><strong>{formatBRL(extras)}</strong></div>
+          <div className="cost-list-item"><strong>Custo total</strong><strong>{formatBRL(fuelCost + extras)}</strong></div>
         </div>
       </div>
     </div>

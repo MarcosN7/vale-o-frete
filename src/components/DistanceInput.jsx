@@ -51,10 +51,10 @@ export default function DistanceInput({
       });
       handleRotaChange(distanciaKm);
       setCalcState('success');
-      setCalcMsg(`✅ Rota calculada: ${distanciaKm} km (dados OpenStreetMap)`);
+      setCalcMsg(` Rota calculada: ${distanciaKm} km (dados OpenStreetMap)`);
     } catch (err) {
       setCalcState('error');
-      setCalcMsg(`❌ ${err.message}`);
+      setCalcMsg(` ${err.message}`);
     }
   };
 
@@ -64,10 +64,10 @@ export default function DistanceInput({
     <div>
       {/* Campo de Deslocamento até a Coleta */}
       <div className="field">
-        <label>
-          📍 Deslocamento até a Coleta (km) <span className="hint">(onde você está até o cliente/partida - opcional)</span>
+        <label htmlFor="distanceinput-field-1">
+           Deslocamento até a Coleta (km) <span className="hint">(onde você está até o cliente/partida - opcional)</span>
         </label>
-        <input
+        <input id="distanceinput-field-1"
           type="number"
           step="0.1"
           min="0"
@@ -82,22 +82,22 @@ export default function DistanceInput({
           className={mode === 'manual' ? 'active' : ''}
           onClick={() => setMode('manual')}
         >
-          📏 Km da Corrida Manual
+           Km da Corrida Manual
         </button>
         <button
           className={mode === 'addresses' ? 'active' : ''}
           onClick={() => setMode('addresses')}
         >
-          🗺️ Por Endereços
+           Por Endereços
         </button>
       </div>
 
       {mode === 'manual' ? (
         <div className="field">
-          <label>
-            📦 Distância da Corrida / Entregas (km) <span className="hint">(informada no app de frete)</span>
+          <label htmlFor="distanceinput-field-2">
+             Distância da Corrida / Entregas (km) <span className="hint">(informada no app de frete)</span>
           </label>
-          <input
+          <input id="distanceinput-field-2"
             type="number"
             step="0.1"
             min="0"
@@ -114,6 +114,7 @@ export default function DistanceInput({
                 <span className="address-label">{letters[i] || '?'}</span>
                 <input
                   type="text"
+                  aria-label={i === 0 ? "Endereço de coleta" : `Endereço da parada ${i}`}
                   placeholder={
                     i === 0 ? 'Endereço de coleta (ex: Rua X, 123, São Paulo)' :
                     i === addresses.length - 1 ? 'Destino final' :
@@ -123,7 +124,7 @@ export default function DistanceInput({
                   onChange={e => updateAddress(i, e.target.value)}
                 />
                 {addresses.length > 2 && i >= 2 && (
-                  <button className="remove-btn" onClick={() => removeAddress(i)}>✕</button>
+                  <button aria-label={`Remover parada ${i}`} className="remove-btn" onClick={() => removeAddress(i)}>✕</button>
                 )}
               </div>
             ))}
@@ -139,7 +140,7 @@ export default function DistanceInput({
             disabled={calcState === 'loading'}
             style={{ marginTop: 10 }}
           >
-            {calcState === 'loading' ? '⏳ Calculando rota...' : '🗺️ Calcular distância real'}
+            {calcState === 'loading' ? ' Calculando rota...' : ' Calcular distância real'}
           </button>
 
           {calcMsg && (
@@ -150,13 +151,13 @@ export default function DistanceInput({
 
           {/* Fallback manual sempre disponível */}
           <div className="field" style={{ marginTop: 12 }}>
-            <label>
+            <label htmlFor="distanceinput-field-3">
               Distância da rota calculada / ajustada (km)
               <span className="hint" style={{ display: 'block' }}>
                 Use se os endereços não foram encontrados
               </span>
             </label>
-            <input
+            <input id="distanceinput-field-3"
               type="number"
               step="0.1"
               min="0"
@@ -171,7 +172,7 @@ export default function DistanceInput({
       {/* Destaque da Distância Total */}
       {(parseFloat(distanciaColeta) > 0 || parseFloat(actualDistanciaRota) > 0) && (
         <div className="distance-summary">
-          <span className="ds-label">🏁 Distância Total a Rodar:</span>
+          <span className="ds-label"> Distância Total a Rodar:</span>
           <span className="ds-value">
             {totalKm.toFixed(1)} km
             {parseFloat(distanciaColeta) > 0 && parseFloat(actualDistanciaRota) > 0 && (

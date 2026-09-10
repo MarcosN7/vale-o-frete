@@ -7,7 +7,6 @@ const TOUR_STEPS = [
     targetSelector: '.hero-section',
     title: 'Bem-vindo ao Vale o Frete!',
     text: 'Sua ferramenta profissional de análise financeira. Descubra em segundos se um frete realmente vale a pena antes de ligar o motor.',
-    emoji: '🚚',
     position: 'bottom',
   },
   {
@@ -15,7 +14,6 @@ const TOUR_STEPS = [
     targetSelector: '#tour-valor-frete',
     title: '1. Informe o valor do frete',
     text: 'Digite o valor bruto total oferecido pelo cliente ou pelo aplicativo de intermediação.',
-    emoji: '💰',
     position: 'bottom',
   },
   {
@@ -23,7 +21,6 @@ const TOUR_STEPS = [
     targetSelector: '#tour-plataforma',
     title: '2. Taxas das plataformas',
     text: 'Selecione inDrive, Lalamove, Uber, 99 ou Frete Direto para descontar as comissões automaticamente e ver sua receita líquida real.',
-    emoji: '🏢',
     position: 'bottom',
   },
   {
@@ -31,7 +28,6 @@ const TOUR_STEPS = [
     targetSelector: '#tour-distancia-retorno',
     title: '3. Distância e Retorno Vazio',
     text: 'Informe a distância e ative o switch de Retorno Vazio se for voltar sem carga. O app calcula o custo real de ida + volta.',
-    emoji: '🔄',
     position: 'bottom',
   },
   {
@@ -39,7 +35,6 @@ const TOUR_STEPS = [
     targetSelector: '#tour-despesas',
     title: '4. Pedágios e Custos Extras',
     text: 'Inclua pedágios previstos e expanda para adicionar custos de alimentação, hospedagem e ajudantes se necessário.',
-    emoji: '🛣️',
     position: 'top',
   },
   {
@@ -47,15 +42,13 @@ const TOUR_STEPS = [
     targetSelector: '.header-actions',
     title: '5. Meu Veículo e Preços ANP',
     text: 'Ajuste o consumo do seu veículo (Caminhão, Carreta, Van, Carro, Moto) e preços de combustível pelo GPS a qualquer momento.',
-    emoji: '⚙️',
     position: 'bottom',
   },
   {
     id: 'calc',
     targetSelector: '#tour-calc-btn',
     title: '6. Veredito e Lucro Real',
-    text: 'Tudo pronto! Clique em calcular para ver o veredito inteligente 🟢🟡🔴, seu lucro por km e comparar com outras plataformas.',
-    emoji: '🚀',
+    text: 'Tudo pronto! Clique em calcular para ver o veredito, seu lucro por km e comparar com outras plataformas.',
     position: 'top',
   },
 ];
@@ -78,6 +71,8 @@ export default function OnboardingTour({ isOpen, onClose }) {
 
     const el = document.querySelector(currentStep.targetSelector);
     if (el) {
+      const disclosure = el.closest('details');
+      if (disclosure) disclosure.open = true;
       const rect = el.getBoundingClientRect();
       setTargetRect({
         top: rect.top + window.scrollY,
@@ -103,7 +98,7 @@ export default function OnboardingTour({ isOpen, onClose }) {
       updatePosition();
       window.addEventListener('resize', updatePosition);
       window.addEventListener('scroll', updatePosition, true);
-      
+
       const timer = setTimeout(updatePosition, 100);
       return () => {
         window.removeEventListener('resize', updatePosition);
@@ -120,7 +115,7 @@ export default function OnboardingTour({ isOpen, onClose }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         handleSkip();
-      } else if (e.key === 'ArrowRight' || e.key === 'Enter') {
+      } else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !e.target.closest('button, a, input, select'))) {
         handleNext();
       } else if (e.key === 'ArrowLeft') {
         handlePrev();
@@ -218,10 +213,10 @@ export default function OnboardingTour({ isOpen, onClose }) {
       )}
 
       {/* Caixa / Tooltip Explicativo */}
-      <div className="tour-tooltip" style={tooltipStyle}>
+      <div className="tour-tooltip" style={tooltipStyle} role="dialog" aria-modal="true" aria-labelledby="tour-title" aria-describedby="tour-description">
         <div className="tour-tooltip-header">
           <div className="tour-badge">
-            <span>{currentStep.emoji}</span>
+
             <span>Passo {currentStepIndex + 1} de {TOUR_STEPS.length}</span>
           </div>
           <button
@@ -234,13 +229,16 @@ export default function OnboardingTour({ isOpen, onClose }) {
           </button>
         </div>
 
-        <h3 className="tour-title">{currentStep.title}</h3>
-        <p className="tour-text">{currentStep.text}</p>
+        <h3 className="tour-title" id="tour-title">{currentStep.title}</h3>
+        <p className="tour-text" id="tour-description">{currentStep.text}</p>
 
         {/* Indicadores de progresso (pontos) */}
         <div className="tour-dots">
           {TOUR_STEPS.map((step, idx) => (
-            <span
+            <button
+              type="button"
+              aria-label={`Ir para o passo ${idx + 1}`}
+              aria-current={idx === currentStepIndex ? 'step' : undefined}
               key={step.id}
               className={`tour-dot ${idx === currentStepIndex ? 'active' : ''} ${idx < currentStepIndex ? 'completed' : ''}`}
               onClick={() => setCurrentStepIndex(idx)}
@@ -273,7 +271,7 @@ export default function OnboardingTour({ isOpen, onClose }) {
               className="tour-btn-next"
               onClick={handleNext}
             >
-              {currentStepIndex === TOUR_STEPS.length - 1 ? 'Concluir 🚀' : 'Próximo →'}
+              {currentStepIndex === TOUR_STEPS.length - 1 ? 'Concluir' : 'Próximo →'}
             </button>
           </div>
         </div>

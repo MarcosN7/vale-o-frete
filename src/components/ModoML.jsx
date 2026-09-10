@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import DistanceInput from './DistanceInput';
-import ResultDisplay, { getCalcData } from './ResultDisplay';
+import ResultDisplay, { getCalcData, ResultPlaceholder } from './ResultDisplay';
 
-export default function ModoML({ settings, onSaveHistory }) {
+export default function ModoML({ settings, onSaveHistory, introduction, calculatorTools }) {
   const [valor, setValor] = useState('');
   const [paradas, setParadas] = useState('');
   const [distanciaRota, setDistanciaRota] = useState('');
@@ -51,11 +51,13 @@ export default function ModoML({ settings, onSaveHistory }) {
   };
 
   return (
-    <div className={`dashboard-grid ${showResult && canCalc ? 'has-result' : ''}`}>
-      <div className="dashboard-col-left">
+    <div className={`dashboard-grid landing-grid ${showResult && canCalc ? 'has-result' : ''}`}>
+      {introduction}
+      <div className="dashboard-col-left" id="calculadora" aria-labelledby="calculator-title">
+        {calculatorTools}
         {!settings?.consumoGasolina && !settings?.consumoCombustivel && (
           <div className="stale-banner" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1e40af' }}>
-            ℹ️ Configure seu veículo no ícone ⚙️ no topo para cálculos exatos.
+             Configure seu veículo em Meu Veículo no topo para cálculos exatos.
           </div>
         )}
 
@@ -67,16 +69,16 @@ export default function ModoML({ settings, onSaveHistory }) {
 
           <div className="field-row">
             <div className="field">
-              <label>💰 Valor da Rota (R$)</label>
-              <input
+              <label htmlFor="modoml-field-1"> Valor da Rota (R$)</label>
+              <input id="modoml-field-1"
                 type="number" step="0.01" min="0" placeholder="Ex: 45.00"
                 value={valor}
                 onChange={e => { setValor(e.target.value); setShowResult(false); setSaved(false); }}
               />
             </div>
             <div className="field">
-              <label>📦 Total de Paradas / Entregas</label>
-              <input
+              <label htmlFor="modoml-field-2"> Total de Paradas / Entregas</label>
+              <input id="modoml-field-2"
                 type="number" step="1" min="1" placeholder="Ex: 8"
                 value={paradas}
                 onChange={e => { setParadas(e.target.value); setShowResult(false); setSaved(false); }}
@@ -103,13 +105,12 @@ export default function ModoML({ settings, onSaveHistory }) {
               style={{ width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', padding: 0 }}
               onClick={handleReset}
               title="Nova rota"
-            >
-              🔄
-            </button>
+            >↺</button>
           )}
         </div>
       </div>
 
+      {!(showResult && canCalc) && <div className="dashboard-col-right"><ResultPlaceholder /></div>}
       {showResult && canCalc && (
         <div className="dashboard-col-right">
           <ResultDisplay
@@ -128,7 +129,7 @@ export default function ModoML({ settings, onSaveHistory }) {
             onClick={handleSaveToHistory}
             disabled={saved}
           >
-            {saved ? '✓ Salvo no histórico' : '📋 Salvar no Histórico'}
+            {saved ? '✓ Salvo no histórico' : ' Salvar no Histórico'}
           </button>
         </div>
       )}

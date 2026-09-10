@@ -23,7 +23,7 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem,
               onClick={() => exportHistoryCSV(history)}
               title="Exportar dados para planilha CSV"
             >
-              <span>📥</span>
+
               <span>Exportar CSV</span>
             </button>
             <button
@@ -40,7 +40,7 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem,
 
       {history.length === 0 ? (
         <div className="empty-state-card">
-          <div className="empty-state-icon">🚛</div>
+
           <h4>Você ainda não analisou nenhum frete</h4>
           <p>
             Calcule seu primeiro frete acima para começar a acompanhar sua rentabilidade e custos por km.
@@ -52,7 +52,7 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem,
               style={{ padding: '10px 20px', fontSize: '0.88rem' }}
               onClick={onStartFirstCalc}
             >
-              ⚡ Começar primeiro cálculo
+               Começar primeiro cálculo
             </button>
           )}
         </div>
@@ -62,10 +62,10 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem,
             {history.map((item) => {
               const isFrete = item.mode === 'frete';
               const modoLabel = item.mode === 'ml'
-                ? '📦 Mercado Livre'
+                ? ' Mercado Livre'
                 : item.mode === 'lalamove'
-                ? '🏍️ LalaMove / inDrive'
-                : '🚛 Viagem de Carga';
+                ? ' LalaMove / inDrive'
+                : ' Viagem de Carga';
 
               return (
                 <div key={item.id} className="history-card-item">
@@ -75,7 +75,7 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem,
                         <span className="hi-mode-badge">{modoLabel}</span>
                         {item.platformName && (
                           <span className="hi-mode-badge" style={{ background: '#eff6ff', color: 'var(--primary)', borderColor: 'var(--primary-border)' }}>
-                            🏢 {item.platformName}
+                             {item.platformName}
                           </span>
                         )}
                       </div>
@@ -113,7 +113,7 @@ export default function History({ history, onClear, onSelectEntry, onDeleteItem,
                           onClick={() => onSelectEntry(item)}
                           title="Recarregar dados no formulário"
                         >
-                          🔄 Repetir
+                           Repetir
                         </button>
                       )}
                       {onDeleteItem && (

@@ -103,10 +103,10 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal-content" style={{ maxWidth: 580 }}>
+      <div role="dialog" aria-modal="true" aria-label="Configurações de plataformas" className="modal-content" style={{ maxWidth: 580 }}>
         <div className="modal-header">
           <div>
-            <h2>🏢 Minhas Plataformas</h2>
+            <h2> Minhas Plataformas</h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
               Configure as comissões e taxas para saber seu lucro líquido real
             </p>
@@ -115,20 +115,20 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
         </div>
 
         <div className="stale-banner" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1e40af', marginBottom: 16 }}>
-          ℹ️ As taxas podem variar por cidade ou categoria. Ajuste conforme o percentual cobrado no seu app.
+           As taxas podem variar por cidade ou categoria. Ajuste conforme o percentual cobrado no seu app.
         </div>
 
         {/* Modo de Edição / Criação */}
         {editingId ? (
           <div className="card" style={{ padding: 18, background: 'var(--surface-hover)' }}>
             <h4 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: 12, color: 'var(--brand-dark)' }}>
-              {isAddingNew ? '➕ Nova Plataforma' : `✏️ Editar ${formData.name || 'Plataforma'}`}
+              {isAddingNew ? ' Nova Plataforma' : ` Editar ${formData.name || 'Plataforma'}`}
             </h4>
 
             <div className="field-row">
               <div className="field">
-                <label>Nome da Plataforma</label>
-                <input
+                <label htmlFor="platformsettingsmodal-field-1">Nome da Plataforma</label>
+                <input id="platformsettingsmodal-field-1"
                   type="text"
                   placeholder="Ex: inDrive, Borzo, Loggi..."
                   value={formData.name}
@@ -136,8 +136,8 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
                 />
               </div>
               <div className="field">
-                <label>Tipo de Cobrança</label>
-                <select
+                <label htmlFor="platformsettingsmodal-field-2">Tipo de Cobrança</label>
+                <select id="platformsettingsmodal-field-2"
                   value={formData.feeType}
                   onChange={e => setFormData({ ...formData, feeType: e.target.value })}
                 >
@@ -154,8 +154,8 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
             {/* Campos de Comissão % */}
             {(formData.feeType === 'percentage' || formData.feeType === 'percentage_and_fixed' || formData.feeType === 'custom_combo') && (
               <div className="field">
-                <label>Comissão Percentual (%)</label>
-                <input
+                <label htmlFor="platformsettingsmodal-field-3">Comissão Percentual (%)</label>
+                <input id="platformsettingsmodal-field-3"
                   type="number"
                   step="0.01"
                   min="0"
@@ -170,8 +170,8 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
             {/* Campos de Taxa Fixa */}
             {(formData.feeType === 'fixed' || formData.feeType === 'percentage_and_fixed' || formData.feeType === 'custom_combo') && (
               <div className="field">
-                <label>Taxa Fixa por Frete (R$)</label>
-                <input
+                <label htmlFor="platformsettingsmodal-field-4">Taxa Fixa por Frete (R$)</label>
+                <input id="platformsettingsmodal-field-4"
                   type="number"
                   step="0.01"
                   min="0"
@@ -187,8 +187,8 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
               <div style={{ background: 'var(--surface)', padding: 12, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', marginBottom: 14 }}>
                 <div className="field-row">
                   <div className="field">
-                    <label>Período de Cobrança</label>
-                    <select
+                    <label htmlFor="platformsettingsmodal-field-5">Período de Cobrança</label>
+                    <select id="platformsettingsmodal-field-5"
                       value={formData.periodType}
                       onChange={e => setFormData({ ...formData, periodType: e.target.value })}
                     >
@@ -199,8 +199,8 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
                     </select>
                   </div>
                   <div className="field">
-                    <label>Valor do Período (R$)</label>
-                    <input
+                    <label htmlFor="platformsettingsmodal-field-6">Valor do Período (R$)</label>
+                    <input id="platformsettingsmodal-field-6"
                       type="number"
                       step="0.01"
                       min="0"
@@ -213,8 +213,8 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
 
                 <div className="field-row" style={{ marginBottom: 0 }}>
                   <div className="field">
-                    <label>Distribuição da Taxa</label>
-                    <select
+                    <label htmlFor="platformsettingsmodal-field-7">Distribuição da Taxa</label>
+                    <select id="platformsettingsmodal-field-7"
                       value={formData.periodDistribution}
                       onChange={e => setFormData({ ...formData, periodDistribution: e.target.value })}
                     >
@@ -225,8 +225,8 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
                   </div>
                   {formData.periodDistribution === 'proportional' && (
                     <div className="field">
-                      <label>Fretes Estimados no Período</label>
-                      <input
+                      <label htmlFor="platformsettingsmodal-field-8">Fretes Estimados no Período</label>
+                      <input id="platformsettingsmodal-field-8"
                         type="number"
                         min="1"
                         placeholder="Ex: 5"
@@ -263,7 +263,7 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
                 return (
                   <div key={plat.id} className="card" style={{ padding: 14, marginBottom: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: '1.4rem' }}>{plat.icon || '🏢'}</span>
+                      <span style={{ fontSize: '1.4rem' }}>{plat.icon || ''}</span>
                       <div>
                         <h4 style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--brand-dark)' }}>
                           {plat.name}
@@ -286,7 +286,7 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
                         style={{ padding: '5px 10px', fontSize: '0.78rem', fontWeight: 700 }}
                         onClick={() => handleStartEdit(plat)}
                       >
-                        ✏️ Editar
+                         Editar
                       </button>
                       {!plat.isDefault && (
                         <button
@@ -311,7 +311,7 @@ export default function PlatformSettingsModal({ isOpen, onClose, platforms, onSa
               style={{ width: '100%', padding: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
               onClick={handleStartAdd}
             >
-              <span>➕</span>
+
               <span>Adicionar Plataforma Personalizada</span>
             </button>
           </div>

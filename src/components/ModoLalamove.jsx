@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import DistanceInput from './DistanceInput';
-import ResultDisplay, { getCalcData } from './ResultDisplay';
+import ResultDisplay, { getCalcData, ResultPlaceholder } from './ResultDisplay';
 
-export default function ModoLalamove({ settings, onSaveHistory }) {
+export default function ModoLalamove({ settings, onSaveHistory, introduction, calculatorTools }) {
   const [valor, setValor] = useState('');
   const [distanciaRota, setDistanciaRota] = useState('');
   const [distanciaColeta, setDistanciaColeta] = useState('');
@@ -50,11 +50,13 @@ export default function ModoLalamove({ settings, onSaveHistory }) {
   };
 
   return (
-    <div className={`dashboard-grid ${showResult && canCalc ? 'has-result' : ''}`}>
-      <div className="dashboard-col-left">
+    <div className={`dashboard-grid landing-grid ${showResult && canCalc ? 'has-result' : ''}`}>
+      {introduction}
+      <div className="dashboard-col-left" id="calculadora" aria-labelledby="calculator-title">
+        {calculatorTools}
         {!settings?.consumoGasolina && !settings?.consumoCombustivel && (
           <div className="stale-banner" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1e40af' }}>
-            ℹ️ Configure seu veículo no ícone ⚙️ no topo para cálculos exatos.
+             Configure seu veículo em Meu Veículo no topo para cálculos exatos.
           </div>
         )}
 
@@ -65,8 +67,8 @@ export default function ModoLalamove({ settings, onSaveHistory }) {
           </div>
 
           <div className="field">
-            <label>💰 Valor da Corrida (R$)</label>
-            <input
+            <label htmlFor="modolalamove-field-1"> Valor da Corrida (R$)</label>
+            <input id="modolalamove-field-1"
               type="number" step="0.01" min="0" placeholder="Ex: 25.00"
               value={valor}
               onChange={e => { setValor(e.target.value); setShowResult(false); setSaved(false); }}
@@ -81,8 +83,8 @@ export default function ModoLalamove({ settings, onSaveHistory }) {
           />
 
           <div className="field">
-            <label>🛣️ Pedágio / Custos Extras (R$) <span className="hint">(opcional)</span></label>
-            <input
+            <label htmlFor="modolalamove-field-2"> Pedágio / Custos Extras (R$) <span className="hint">(opcional)</span></label>
+            <input id="modolalamove-field-2"
               type="number" step="0.01" min="0" placeholder="Ex: 5.00"
               value={extras}
               onChange={e => { setExtras(e.target.value); setShowResult(false); setSaved(false); }}
@@ -101,13 +103,12 @@ export default function ModoLalamove({ settings, onSaveHistory }) {
               style={{ width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', padding: 0 }}
               onClick={handleReset}
               title="Nova corrida"
-            >
-              🔄
-            </button>
+            >↺</button>
           )}
         </div>
       </div>
 
+      {!(showResult && canCalc) && <div className="dashboard-col-right"><ResultPlaceholder /></div>}
       {showResult && canCalc && (
         <div className="dashboard-col-right">
           <ResultDisplay
@@ -126,7 +127,7 @@ export default function ModoLalamove({ settings, onSaveHistory }) {
             onClick={handleSaveToHistory}
             disabled={saved}
           >
-            {saved ? '✓ Salvo no histórico' : '📋 Salvar no Histórico'}
+            {saved ? '✓ Salvo no histórico' : ' Salvar no Histórico'}
           </button>
         </div>
       )}

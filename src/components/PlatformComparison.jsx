@@ -1,124 +1,42 @@
-import { formatBRL, formatPercent, comparePlatforms } from '../utils';
+import { formatBRL, formatPercent, comparePlatforms, DEFAULT_PLATFORMS } from '../utils';
 
-export default function PlatformComparison({
-  valorFrete,
-  distanciaTotal,
-  custoTotal,
-  platforms,
-  onSelectPlatform,
-  onClose,
-}) {
-  const { bestPlatform, comparisons } = comparePlatforms({
-    valorFrete,
-    distanciaTotal,
-    custoTotal,
-    platforms,
-  });
-
-  if (!comparisons || comparisons.length === 0) return null;
-
+export default function PlatformComparison({ valorFrete, distanciaTotal, custoTotal, platforms = DEFAULT_PLATFORMS, onSelectPlatform, onClose, onOpenPlatformSettings, pending = false }) {
+  const { bestPlatform, comparisons } = comparePlatforms({ valorFrete, distanciaTotal, custoTotal, platforms });
+  if (!comparisons?.length) return null;
   return (
-    <div className="card" style={{ marginTop: 20, border: '2px solid var(--primary-border)', background: '#fafcff' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--brand-dark)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>📊</span>
-            <span>Comparador de Plataformas</span>
-          </h3>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
-            Descubra onde sobra mais dinheiro para o mesmo frete de {formatBRL(valorFrete)}
-          </p>
+    <section className="comparison-section" aria-labelledby="comparison-title">
+      <div className="section-heading">
+        <div><h2 id="comparison-title">Compare entre as principais plataformas</h2><p>{pending ? "Calcule uma corrida para comparar o lucro em cada plataforma." : `Mesmo frete de ${formatBRL(valorFrete)}, mesmas despesas. Veja o efeito das taxas.`}</p></div>
+        <div className="comparison-actions">
+          {onOpenPlatformSettings && <button className="text-button" type="button" onClick={onOpenPlatformSettings}>Ver detalhes das taxas <span aria-hidden="true">→</span></button>}
+          {onClose && <button className="text-button comparison-close" type="button" onClick={onClose}>Fechar comparação</button>}
         </div>
-        {onClose && (
-          <button type="button" className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }} onClick={onClose}>
-            ✕ Fechar
-          </button>
-        )}
       </div>
-
-      {/* Destaque do Melhor Resultado */}
-      {bestPlatform && (
-        <div style={{ background: 'var(--success-bg)', border: '1.5px solid var(--success-border)', borderRadius: 'var(--radius-md)', padding: '14px 16px', marginBottom: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: '1.2rem' }}>🏆</span>
-            <span style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--success-text)' }}>
-              Melhor opção: {bestPlatform.platformName}
-            </span>
-          </div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--success-text)', margin: 0 }}>
-            Lucro real de <strong>{formatBRL(bestPlatform.lucro)}</strong> ({formatPercent(bestPlatform.margem)} de margem).
-          </p>
-        </div>
-      )}
-
-      {/* Lista / Cards de Comparação */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {comparisons.map((item, index) => {
-          const isWinner = item.isBest;
-
-          return (
-            <div
-              key={item.platformId}
-              className="card"
-              style={{
-                padding: 14,
-                marginBottom: 0,
-                border: isWinner ? '2px solid var(--success)' : '1px solid var(--border)',
-                background: isWinner ? '#ffffff' : 'var(--surface)',
-                boxShadow: isWinner ? 'var(--shadow-md)' : 'var(--shadow-xs)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: '1.3rem' }}>{item.platformIcon}</span>
-                  <div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--brand-dark)' }}>
-                      {item.platformName}
-                    </h4>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      Taxas: <strong>{formatBRL(item.totalFees)}</strong> ({formatPercent(item.effectiveRate)} efetivo)
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '1.15rem', fontWeight: 900, color: item.lucro >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                    {formatBRL(item.lucro)}
-                  </div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    {formatBRL(item.lucroPorKm)}/km
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: 8, fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                <span>Receita líquida: <strong>{formatBRL(item.netRevenue)}</strong></span>
-                {isWinner ? (
-                  <span style={{ color: 'var(--success-text)', fontWeight: 800 }}>
-                    🥇 Maior rentabilidade
-                  </span>
-                ) : (
-                  <span style={{ color: 'var(--text-muted)' }}>
-                    -{formatBRL(item.diffFromBest)} em relação ao líder
-                  </span>
-                )}
-              </div>
-
-              {onSelectPlatform && (
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  style={{ width: '100%', marginTop: 8, padding: '6px', fontSize: '0.78rem', fontWeight: 700 }}
-                  onClick={() => onSelectPlatform(item.platformId)}
-                >
-                  Usar {item.platformName} no cálculo
-                </button>
-              )}
-            </div>
-          );
-        })}
+      {!pending && bestPlatform && <p className="comparison-summary">Maior resultado: <strong>{bestPlatform.platformName}</strong> · <strong className={bestPlatform.lucro >= 0 ? 'positive' : 'negative'}>{formatBRL(bestPlatform.lucro)}</strong> de lucro real ({formatPercent(bestPlatform.margem)} de margem).</p>}
+      <p className="table-hint" id="table-hint">Deslize a tabela para ver todos os indicadores.</p>
+      <div className="table-scroll" role="region" aria-label="Resultados por plataforma" aria-describedby="table-hint" tabIndex={0}>
+        <table className="comparison-table">
+          <caption className="sr-only">Comparação das taxas e do lucro para o mesmo frete</caption>
+          <thead><tr><th scope="col">Plataforma</th><th scope="col">Taxas</th><th scope="col">Receita líquida</th><th scope="col">Lucro real</th><th scope="col">Lucro / km</th><th scope="col">Diferença para o maior</th>{onSelectPlatform && <th scope="col"><span className="sr-only">Selecionar plataforma</span></th>}</tr></thead>
+          <tbody>{comparisons.map(item => {
+            const platform = platforms.find(platform => platform.id === item.platformId);
+            const configuredFee = platform.feeType === 'sem_taxa' ? 'Sem taxa'
+              : platform.feeType === 'percentage' ? formatPercent(platform.percentage)
+              : platform.feeType === 'fixed' ? `${formatBRL(platform.fixedFee)} / frete`
+              : 'Personalizada';
+            return (
+            <tr key={item.platformId} className={!pending && item.isBest ? 'best-row' : ''}>
+              <th scope="row">{item.platformName}{!pending && item.isBest && <small>Maior resultado</small>}</th>
+              <td>{pending ? configuredFee : formatBRL(item.totalFees)}{!pending && <small>{formatPercent(item.effectiveRate)} efetivo</small>}</td>
+              <td>{pending ? '—' : formatBRL(item.netRevenue)}</td>
+              <td className={pending ? '' : item.lucro >= 0 ? 'positive' : 'negative'}><strong>{pending ? '—' : formatBRL(item.lucro)}</strong></td>
+              <td className={pending ? '' : item.lucroPorKm >= 0 ? 'positive' : 'negative'}>{pending ? '—' : formatBRL(item.lucroPorKm)}</td>
+              <td>{pending || item.isBest ? '—' : `− ${formatBRL(item.diffFromBest)}`}</td>
+              {onSelectPlatform && <td><button type="button" className="table-select" aria-label={`Usar ${item.platformName} no cálculo`} onClick={() => onSelectPlatform(item.platformId)}>Usar</button></td>}
+            </tr>
+          ); })}</tbody>
+        </table>
       </div>
-    </div>
+    </section>
   );
 }
-

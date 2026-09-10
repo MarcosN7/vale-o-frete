@@ -93,19 +93,19 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
       precoAtualizadoEm: new Date().toISOString(),
     }));
     setDetectStep('success');
-    setDetectMsg(`✅ Preços médios para ${p.nome} (${uf}) — fonte: ANP`);
+    setDetectMsg(` Preços médios para ${p.nome} (${uf}) — fonte: ANP`);
     setShowStatePicker(false);
   };
 
   const handleDetectLocation = async () => {
     setDetectStep('gps');
-    setDetectMsg('📍 Obtendo sua localização GPS...');
+    setDetectMsg(' Obtendo sua localização GPS...');
     setShowStatePicker(false);
     try {
       const prices = await detectFuelPrices((step) => {
         if (step === 'nominatim') {
           setDetectStep('nominatim');
-          setDetectMsg('🔍 Identificando seu estado...');
+          setDetectMsg(' Identificando seu estado...');
         }
       });
       setForm(prev => ({
@@ -116,28 +116,28 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
         precoAtualizadoEm: new Date().toISOString(),
       }));
       setDetectStep('success');
-      setDetectMsg(`✅ Preços médios para ${prices.nome} (${prices.uf}) — fonte: ANP`);
+      setDetectMsg(` Preços médios para ${prices.nome} (${prices.uf}) — fonte: ANP`);
     } catch (err) {
       if (err.code === 1) {
         setDetectStep('error');
-        setDetectMsg('🔒 Permissão de localização negada pelo browser.');
+        setDetectMsg(' Permissão de localização negada pelo browser.');
         setShowStatePicker(true);
         return;
       }
       if (err.code === 3) {
         setDetectStep('error');
-        setDetectMsg('⏱️ Tempo esgotado ao obter GPS. Selecione seu estado:');
+        setDetectMsg(' Tempo esgotado ao obter GPS. Selecione seu estado:');
         setShowStatePicker(true);
         return;
       }
       if (err.coords) {
         setDetectStep('error');
-        setDetectMsg('⚠️ GPS funcionou mas não identificamos seu estado. Selecione manualmente:');
+        setDetectMsg(' GPS funcionou mas não identificamos seu estado. Selecione manualmente:');
         setShowStatePicker(true);
         return;
       }
       setDetectStep('error');
-      setDetectMsg('🌐 Falha ao consultar localização. Selecione seu estado:');
+      setDetectMsg(' Falha ao consultar localização. Selecione seu estado:');
       setShowStatePicker(true);
     }
   };
@@ -177,10 +177,10 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label="Configurações do veículo" className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>⚙️ Meu Veículo & Custos Padrão</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <h2> Meu Veículo & Custos Padrão</h2>
+          <button aria-label="Fechar configurações" className="close-btn" onClick={onClose}>✕</button>
         </div>
 
         {/* Tipo de veículo */}
@@ -194,21 +194,21 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
                 className={form.tipoVeiculo === v.id ? 'active' : ''}
                 onClick={() => handleSelectVehicleType(v.id)}
               >
-                <span className="vt-icon">{v.icon}</span>
+
                 {v.label}
               </button>
             ))}
           </div>
           <span className="hint" style={{ marginTop: 4, display: 'block' }}>
-            💡 Ao trocar o tipo, preenchemos automaticamente médias estimadas de consumo e desgaste.
+             Ao trocar o tipo, preenchemos automaticamente médias estimadas de consumo e desgaste.
           </span>
         </div>
 
         {/* Consumo */}
         <div className="field-row">
           <div className="field">
-            <label>Consumo Médio {form.tipoCombustivel === 'flex' ? '(Gasolina)' : ''} <span className="hint">(km/l)</span></label>
-            <input
+            <label htmlFor="settingsmodal-field-1">Consumo Médio {form.tipoCombustivel === 'flex' ? '(Gasolina)' : ''} <span className="hint">(km/l)</span></label>
+            <input id="settingsmodal-field-1"
               type="number"
               step="0.1"
               min="0.1"
@@ -222,8 +222,8 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
           </div>
           {form.tipoCombustivel === 'flex' && (
             <div className="field">
-              <label>Consumo no Etanol <span className="hint">(km/l)</span></label>
-              <input
+              <label htmlFor="settingsmodal-field-2">Consumo no Etanol <span className="hint">(km/l)</span></label>
+              <input id="settingsmodal-field-2"
                 type="number"
                 step="0.1"
                 min="0.1"
@@ -234,15 +234,15 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
             </div>
           )}
           <div className="field">
-            <label>Combustível Principal</label>
-            <select
+            <label htmlFor="settingsmodal-field-3">Combustível Principal</label>
+            <select id="settingsmodal-field-3"
               value={form.tipoCombustivel}
               onChange={e => set('tipoCombustivel', e.target.value)}
             >
-              <option value="diesel">🛢️ Diesel</option>
-              <option value="gasolina">⛽ Gasolina</option>
-              <option value="etanol">🌿 Etanol</option>
-              <option value="flex">🔄 Flex (Gas/Eta)</option>
+              <option value="diesel"> Diesel</option>
+              <option value="gasolina"> Gasolina</option>
+              <option value="etanol"> Etanol</option>
+              <option value="flex"> Flex (Gas/Eta)</option>
             </select>
           </div>
         </div>
@@ -256,7 +256,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
             onClick={handleDetectLocation}
             disabled={isDetecting}
           >
-            {isDetecting ? detectMsg : '📍 Preencher pelos preços médios do meu estado (ANP)'}
+            {isDetecting ? detectMsg : ' Preencher pelos preços médios do meu estado (ANP)'}
           </button>
 
           {detectMsg && !isDetecting && (
@@ -286,8 +286,8 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
         {/* Campos de preço manuais */}
         <div className="field-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
           <div className="field">
-            <label>🛢️ Diesel <span className="hint">(R$/l)</span></label>
-            <input
+            <label htmlFor="settingsmodal-field-4"> Diesel <span className="hint">(R$/l)</span></label>
+            <input id="settingsmodal-field-4"
               type="number"
               step="0.01"
               min="0"
@@ -297,8 +297,8 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
             />
           </div>
           <div className="field">
-            <label>⛽ Gasolina <span className="hint">(R$/l)</span></label>
-            <input
+            <label htmlFor="settingsmodal-field-5"> Gasolina <span className="hint">(R$/l)</span></label>
+            <input id="settingsmodal-field-5"
               type="number"
               step="0.01"
               min="0"
@@ -308,8 +308,8 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
             />
           </div>
           <div className="field">
-            <label>🌿 Etanol <span className="hint">(R$/l)</span></label>
-            <input
+            <label htmlFor="settingsmodal-field-6"> Etanol <span className="hint">(R$/l)</span></label>
+            <input id="settingsmodal-field-6"
               type="number"
               step="0.01"
               min="0"
@@ -323,12 +323,12 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
         {/* Custos Operacionais por Km */}
         <div style={{ marginTop: 8, marginBottom: 12, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
           <label style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)', display: 'block', marginBottom: 8 }}>
-            🔧 Custos de Desgaste e Manutenção (por km)
+             Custos de Desgaste e Manutenção (por km)
           </label>
           <div className="field-row">
             <div className="field">
-              <label>Manutenção <span className="hint">(R$/km)</span></label>
-              <input
+              <label htmlFor="settingsmodal-field-7">Manutenção <span className="hint">(R$/km)</span></label>
+              <input id="settingsmodal-field-7"
                 type="number"
                 step="0.01"
                 min="0"
@@ -338,8 +338,8 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
               />
             </div>
             <div className="field">
-              <label>Pneus <span className="hint">(R$/km)</span></label>
-              <input
+              <label htmlFor="settingsmodal-field-8">Pneus <span className="hint">(R$/km)</span></label>
+              <input id="settingsmodal-field-8"
                 type="number"
                 step="0.01"
                 min="0"
@@ -351,8 +351,8 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
           </div>
           <div className="field-row">
             <div className="field">
-              <label>Depreciação <span className="hint">(R$/km)</span></label>
-              <input
+              <label htmlFor="settingsmodal-field-9">Depreciação <span className="hint">(R$/km)</span></label>
+              <input id="settingsmodal-field-9"
                 type="number"
                 step="0.01"
                 min="0"
@@ -362,8 +362,8 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
               />
             </div>
             <div className="field">
-              <label>Outros por km <span className="hint">(óleo, etc)</span></label>
-              <input
+              <label htmlFor="settingsmodal-field-10">Outros por km <span className="hint">(óleo, etc)</span></label>
+              <input id="settingsmodal-field-10"
                 type="number"
                 step="0.01"
                 min="0"
@@ -377,7 +377,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
 
         {/* Faixas do veredito */}
         <div className="field" style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-          <label>🚦 Margem de Lucro Mínima Desejada</label>
+          <label> Margem de Lucro Mínima Desejada</label>
           <div className="threshold-row">
             <div className="threshold-item">
               <span className="threshold-dot red" />
@@ -387,10 +387,11 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
                 step="1"
                 min="0"
                 placeholder="10"
+                aria-label="Margem abaixo da qual não vale a pena (%)"
                 value={form.marginBad}
                 onChange={e => set('marginBad', e.target.value)}
               />
-              <span className="threshold-label">% → 🔴 Não vale</span>
+              <span className="threshold-label">% →  Não vale</span>
             </div>
             <div className="threshold-item">
               <span className="threshold-dot yellow" />
@@ -400,10 +401,11 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
                 step="1"
                 min="0"
                 placeholder="22"
+                aria-label="Margem abaixo da qual é preciso atenção (%)"
                 value={form.marginOk}
                 onChange={e => set('marginOk', e.target.value)}
               />
-              <span className="threshold-label">% → 🟡 Atenção</span>
+              <span className="threshold-label">% →  Atenção</span>
             </div>
           </div>
         </div>
@@ -420,7 +422,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
                 onRestartTour();
               }}
             >
-              <span>🎓</span>
+
               <span>Ver tutorial interativo novamente</span>
             </button>
           </div>
