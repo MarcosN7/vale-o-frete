@@ -38,11 +38,14 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
         ...DEFAULT_SETTINGS,
         ...settings,
         consumoCombustivel: settings.consumoCombustivel || settings.consumoGasolina || '2.8',
+        consumoEtanol: settings.consumoEtanol || '',
         manutencaoKm: settings.manutencaoKm !== undefined ? settings.manutencaoKm : '0.35',
         pneusKm: settings.pneusKm !== undefined ? settings.pneusKm : '0.20',
         depreciacaoKm: settings.depreciacaoKm !== undefined ? settings.depreciacaoKm : '0.25',
         outrosKm: settings.outrosKm !== undefined ? settings.outrosKm : '0.08',
         precoDiesel: settings.precoDiesel || '5.89',
+        precoGasolina: settings.precoGasolina || '5.89',
+        precoEtanol: settings.precoEtanol || '3.99',
         thresholdBad: settings.thresholdBad ?? DEFAULT_THRESHOLDS.bad,
         thresholdOk: settings.thresholdOk ?? DEFAULT_THRESHOLDS.ok,
         marginBad: settings.marginBad ?? DEFAULT_THRESHOLDS.marginBad,
@@ -204,7 +207,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
         {/* Consumo */}
         <div className="field-row">
           <div className="field">
-            <label>Consumo Médio <span className="hint">(km/l)</span></label>
+            <label>Consumo Médio {form.tipoCombustivel === 'flex' ? '(Gasolina)' : ''} <span className="hint">(km/l)</span></label>
             <input
               type="number"
               step="0.1"
@@ -217,6 +220,19 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
               }}
             />
           </div>
+          {form.tipoCombustivel === 'flex' && (
+            <div className="field">
+              <label>Consumo no Etanol <span className="hint">(km/l)</span></label>
+              <input
+                type="number"
+                step="0.1"
+                min="0.1"
+                placeholder={form.consumoCombustivel ? `Ex: ${(parseFloat(form.consumoCombustivel) * 0.7).toFixed(1)}` : 'Ex: 7.5'}
+                value={form.consumoEtanol}
+                onChange={e => set('consumoEtanol', e.target.value)}
+              />
+            </div>
+          )}
           <div className="field">
             <label>Combustível Principal</label>
             <select
@@ -268,9 +284,9 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
         </div>
 
         {/* Campos de preço manuais */}
-        <div className="field-row">
+        <div className="field-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
           <div className="field">
-            <label>Diesel <span className="hint">(R$/l)</span></label>
+            <label>🛢️ Diesel <span className="hint">(R$/l)</span></label>
             <input
               type="number"
               step="0.01"
@@ -281,7 +297,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
             />
           </div>
           <div className="field">
-            <label>Gasolina <span className="hint">(R$/l)</span></label>
+            <label>⛽ Gasolina <span className="hint">(R$/l)</span></label>
             <input
               type="number"
               step="0.01"
@@ -289,6 +305,17 @@ export default function SettingsModal({ isOpen, onClose, settings, onSave, onRes
               placeholder="Ex: 5.89"
               value={form.precoGasolina}
               onChange={e => { set('precoGasolina', e.target.value); set('precoAtualizadoEm', new Date().toISOString()); }}
+            />
+          </div>
+          <div className="field">
+            <label>🌿 Etanol <span className="hint">(R$/l)</span></label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="Ex: 3.99"
+              value={form.precoEtanol}
+              onChange={e => { set('precoEtanol', e.target.value); set('precoAtualizadoEm', new Date().toISOString()); }}
             />
           </div>
         </div>

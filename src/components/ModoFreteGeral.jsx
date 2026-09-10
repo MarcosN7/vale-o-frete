@@ -101,13 +101,36 @@ export default function ModoFreteGeral({
 
   // Combustível
   const tipoComb = settings?.tipoCombustivel || 'diesel';
-  const precoComb = tipoComb === 'diesel'
+  let precoComb = tipoComb === 'diesel'
     ? (settings?.precoDiesel || 5.89)
     : tipoComb === 'etanol'
     ? (settings?.precoEtanol || 3.99)
     : (settings?.precoGasolina || 5.89);
 
-  const consumo = parseFloat(settings?.consumoCombustivel) || parseFloat(settings?.consumoGasolina) || 2.8;
+  let consumo = parseFloat(settings?.consumoCombustivel) || parseFloat(settings?.consumoGasolina) || 2.8;
+
+  if (tipoComb === 'etanol') {
+    if (settings?.consumoEtanol > 0) {
+      consumo = parseFloat(settings.consumoEtanol);
+    } else if (consumo > 0 && consumo !== 2.8) {
+      consumo = consumo * 0.7;
+    }
+  } else if (tipoComb === 'flex') {
+    const precoGas = settings?.precoGasolina || 5.89;
+    const precoEta = settings?.precoEtanol || 3.99;
+    const consGas = consumo;
+    const consEta = parseFloat(settings?.consumoEtanol) || (consGas * 0.7);
+    const custoKmGas = consGas > 0 ? precoGas / consGas : 0;
+    const custoKmEta = consEta > 0 ? precoEta / consEta : 0;
+
+    if (custoKmEta > 0 && custoKmEta < custoKmGas) {
+      precoComb = precoEta;
+      consumo = consEta;
+    } else {
+      precoComb = precoGas;
+      consumo = consGas;
+    }
+  }
 
   const canCalc = freteNum > 0 && idaNum > 0 && consumo > 0;
 
