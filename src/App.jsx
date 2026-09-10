@@ -41,8 +41,6 @@ export default function App() {
     const saved = loadSettings();
     if (saved) {
       setSettings(saved);
-    } else {
-      setShowSettings(true);
     }
     setHistory(loadHistory());
     setPlatforms(loadPlatforms());
@@ -53,8 +51,18 @@ export default function App() {
         setShowTour(true);
       }, 600);
       return () => clearTimeout(tourTimer);
+    } else if (!saved) {
+      setShowSettings(true);
     }
   }, []);
+
+  const handleCloseTour = () => {
+    setShowTour(false);
+    // Se o usuário ainda não tem configurações de veículo salvas, abre o modal de veículos após concluir o tour
+    if (!settings && !loadSettings()) {
+      setTimeout(() => setShowSettings(true), 300);
+    }
+  };
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -255,7 +263,7 @@ export default function App() {
       {/* Tutorial Interativo de Primeiro Acesso */}
       <OnboardingTour
         isOpen={showTour}
-        onClose={() => setShowTour(false)}
+        onClose={handleCloseTour}
       />
 
       {/* Toast Notification */}

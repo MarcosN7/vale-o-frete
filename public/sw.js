@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vale-o-frete-v1';
+const CACHE_NAME = 'vale-o-frete-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',

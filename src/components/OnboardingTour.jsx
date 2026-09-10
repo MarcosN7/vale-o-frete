@@ -64,6 +64,12 @@ export default function OnboardingTour({ isOpen, onClose }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStepIndex(0);
+    }
+  }, [isOpen]);
+
   const currentStep = TOUR_STEPS[currentStepIndex];
 
   // Atualizar a posição do elemento alvo

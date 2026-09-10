@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS = {
 const STATES_LIST = Object.entries(ANP_PRICES)
   .sort((a, b) => a[1].nome.localeCompare(b[1].nome));
 
-export default function SettingsModal({ isOpen, onClose, settings, onSave }) {
+export default function SettingsModal({ isOpen, onClose, settings, onSave, onRestartTour }) {
   const [form, setForm] = useState(DEFAULT_SETTINGS);
   const [detectStep, setDetectStep] = useState('idle'); // idle | gps | nominatim | success | error
   const [detectMsg, setDetectMsg] = useState('');
