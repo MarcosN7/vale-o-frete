@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 
+# Vale o Frete production on Cloudflare
 Sitemap: https://vale-o-frete.marcosbastos67.workers.dev/sitemap.xml
