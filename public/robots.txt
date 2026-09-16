@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://vale-o-frete-xavv-beta.vercel.app/sitemap.xml
+Sitemap: https://vale-o-frete.marcosbastos67.workers.dev/sitemap.xml
