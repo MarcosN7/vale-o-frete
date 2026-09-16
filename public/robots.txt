@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vale-o-frete-xavv-beta.vercel.app/sitemap.xml
