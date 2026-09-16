@@ -439,3 +439,6 @@ input[type='checkbox'] { accent-color: var(--primary); }
   .how-steps li, .how-steps li:first-child { padding: 20px 0; border-right: 0; border-bottom: 1px solid var(--border); }
   .how-steps li:last-child { border-bottom: 0; }
 }
+
+/* Keep the table's visually hidden labels inside its scroll container. */
+.table-scroll { position: relative; }
