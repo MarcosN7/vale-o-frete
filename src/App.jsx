@@ -129,19 +129,18 @@ export default function App() {
 
   const introduction = (
     <section className="hero-section" id="inicio">
-      <p className="hero-eyebrow">Mais do que corridas, melhores escolhas</p>
-      <h1 className="hero-title">Descubra se a corrida <span>realmente vale a pena</span></h1>
+      <p className="hero-eyebrow">Para quem vive na estrada</p>
+      <h1 className="hero-title">Seu próximo frete.<br /><span>Na ponta do lápis.</span></h1>
       <p className="hero-subtitle">
-        Calcule o lucro real das suas corridas, considerando combustível, taxas, pedágios e outros custos.
-        Tome decisões com mais segurança e dirija com mais tranquilidade.
+        O valor da corrida não é o que fica no bolso. Desconte combustível, taxas e despesas antes de aceitar.
       </p>
       <div className="hero-buttons">
-        <a className="btn-primary hero-cta" href="#calculadora">Simular agora <span aria-hidden="true">→</span></a>
+        <a className="btn-primary hero-cta" href="#calculadora">Calcular meu frete <span aria-hidden="true">→</span></a>
         <button className="btn-secondary" onClick={() => { setMode('frete'); setShowTour(true); }}>Ver como funciona</button>
       </div>
       <div className="hero-facts">
         <div><strong>Seu lucro real</strong><span>em cada corrida</span></div>
-        <div><strong>Mais clareza</strong><span>nas decisões</span></div>
+        <div><strong>Sem custo</strong><span>para usar</span></div>
         <div><strong>Sem cadastro</strong><span>direto no navegador</span></div>
       </div>
     </section>
@@ -167,7 +166,7 @@ export default function App() {
       <a className="skip-link" href="#calculadora">Pular para a calculadora</a>
       <header className="app-header">
         <div className="header-content">
-          <a className="logo-wrapper" href="#inicio"><svg className="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M5 5h22a3 3 0 0 1 2.2 5L18 22a3 3 0 0 1-4.5 0L2.8 10A3 3 0 0 1 5 5Z" fill="#0664ff"/><path d="m14 28 6 6L35 13" stroke="#079653" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/></svg>Vale o Frete</a>
+          <a className="logo-wrapper" href="#inicio"><img className="brand-mark" src="/favicon.svg" width="40" height="40" alt="" />Vale o Frete</a>
           <nav className="header-nav" aria-label="Navegação principal">
             <a href="#calculadora">Calculadora</a>
             <a href="#comparar" onClick={() => setMode('frete')}>Comparar</a>
@@ -249,7 +248,7 @@ export default function App() {
             onStartFirstCalc={handleStartFirstCalc}
           />
         <footer id="sobre" className="site-footer">
-          <div><strong>Vale o Frete</strong><p>Mais clareza para decidir sua próxima corrida.</p></div>
+          <div><strong>Vale o Frete</strong><p>Faça a conta. Pegue a estrada.</p></div>
           <p>Simulações com os custos que você informa.<br />Configurações e histórico salvos neste navegador.</p>
         </footer>
       </div>

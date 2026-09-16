@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vale-o-frete-v2';
+const CACHE_NAME = 'vale-o-frete-v3-brand';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -14,7 +14,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k.startsWith('vale-o-frete-') && k !== CACHE_NAME).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
