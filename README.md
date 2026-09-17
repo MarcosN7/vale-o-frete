@@ -131,3 +131,10 @@ O projeto está otimizado para deploy instantâneo na **Vercel**:
 ## 📄 Licença
 
 Distribuído sob a licença **MIT** — livre para uso pessoal e comercial.
+
+## Calcular pela rota (preview)
+
+A implementação isolada de mapa e roteamento está documentada em
+[docs/route-calculator.md](docs/route-calculator.md), incluindo arquitetura, execução
+local, configurações e plano de homologação. Desativada por padrão; não altera a
+calculadora financeira.

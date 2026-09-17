@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
+
 import SettingsModal from './components/SettingsModal';
 import PlatformSettingsModal from './components/PlatformSettingsModal';
 import OnboardingTour from './components/OnboardingTour';
@@ -19,6 +20,10 @@ import {
   DEFAULT_PLATFORMS,
 } from './utils';
 
+
+const routeEnabled = import.meta.env.VITE_ROUTE_CALCULATOR_ENABLED === 'true';
+const RouteCalculator = lazy(() => import('./features/route-calculator/RouteCalculator'));
+
 // Register PWA service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -27,6 +32,7 @@ if ('serviceWorker' in navigator) {
 }
 
 export default function App() {
+  const [showRoute, setShowRoute] = useState(false);
   const [settings, setSettings] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [platforms, setPlatforms] = useState(DEFAULT_PLATFORMS);
@@ -230,6 +236,15 @@ export default function App() {
             />
           )}
 
+          {routeEnabled && <div id="calcular-pela-rota">
+            <button type="button" className="btn-secondary" aria-expanded={showRoute}
+              aria-controls="route-panel" onClick={() => setShowRoute(value => !value)}>
+              {showRoute ? 'Fechar mapa da rota' : 'Calcular pela rota'}
+            </button>
+            <div id="route-panel">{showRoute && <Suspense fallback={<p role="status">Carregando mapa…</p>}>
+              <RouteCalculator />
+            </Suspense>}</div>
+          </div>}
         </main>
         <section id="como-funciona" className="info-section" aria-labelledby="how-title">
           <div className="section-heading"><h2 id="how-title">Como funciona</h2><button className="text-button" onClick={() => { setMode('frete'); setShowTour(true); }}>Abrir tutorial</button></div>

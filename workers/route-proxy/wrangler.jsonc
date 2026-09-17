@@ -1,0 +1,15 @@
+{
+  "name": "vale-o-frete-route-preview",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "vars": {
+    "ALLOWED_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173"
+  },
+  "ratelimits": [{
+    "name": "ROUTE_RATE_LIMITER",
+    "namespace_id": "1001",
+    "simple": { "limit": 30, "period": 60 }
+  }],
+  "observability": { "enabled": false }
+}
