@@ -92,3 +92,14 @@ test('sanitizes provider errors and rejects malformed successful responses', asy
   globalThis.fetch = async () => { throw new Error('network'); };
   assert.equal((await worker.fetch(request('route', { coordinates: [pickup.coordinates, destination.coordinates] }), env())).status, 504);
 });
+
+test('direct and pickup itineraries require every selected endpoint', async () => {
+  const { itineraryPoints, distanceInputs } = await import('../src/features/route-calculator/route-model.js');
+  assert.deepEqual(itineraryPoints(current, null, [], destination, false), [current, destination]);
+  assert.deepEqual(itineraryPoints(current, pickup, [stop], destination, true), [current, pickup, stop, destination]);
+  assert.equal(itineraryPoints(current, null, [], destination, true), null);
+  assert.equal(itineraryPoints(null, pickup, [], destination, true), null);
+  assert.equal(itineraryPoints(current, pickup, [null], destination, true), null);
+  assert.deepEqual(distanceInputs(feature, true), { totalKm: 3, approachKm: 1, deliveryKm: 2 });
+  assert.deepEqual(distanceInputs(feature, false), { totalKm: 3, approachKm: 0, deliveryKm: 3 });
+});

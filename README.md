@@ -134,7 +134,7 @@ Distribuído sob a licença **MIT** — livre para uso pessoal e comercial.
 
 ## Calcular pela rota (preview)
 
-A implementação isolada de mapa e roteamento está documentada em
+O cálculo automático de distância por endereços está documentado em
 [docs/route-calculator.md](docs/route-calculator.md), incluindo arquitetura, execução
-local, configurações e plano de homologação. Desativada por padrão; não altera a
-calculadora financeira.
+local, configurações e plano de homologação. Desativado por padrão; alimenta a
+distância nos três modos de frete sem alterar as fórmulas financeiras.

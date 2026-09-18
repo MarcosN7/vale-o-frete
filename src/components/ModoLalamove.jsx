@@ -3,6 +3,7 @@ import DistanceInput from './DistanceInput';
 import ResultDisplay, { getCalcData, ResultPlaceholder } from './ResultDisplay';
 
 export default function ModoLalamove({ settings, onSaveHistory, introduction, calculatorTools }) {
+  const [routeRevision, setRouteRevision] = useState(0);
   const [valor, setValor] = useState('');
   const [distanciaRota, setDistanciaRota] = useState('');
   const [distanciaColeta, setDistanciaColeta] = useState('');
@@ -41,6 +42,7 @@ export default function ModoLalamove({ settings, onSaveHistory, introduction, ca
   };
 
   const handleReset = () => {
+    setRouteRevision(value => value + 1);
     setValor('');
     setDistanciaRota('');
     setDistanciaColeta('');
@@ -75,7 +77,7 @@ export default function ModoLalamove({ settings, onSaveHistory, introduction, ca
             />
           </div>
 
-          <DistanceInput
+          <DistanceInput key={routeRevision}
             distanciaRota={distanciaRota}
             onDistanciaRotaChange={d => { setDistanciaRota(d); setShowResult(false); setSaved(false); }}
             distanciaColeta={distanciaColeta}

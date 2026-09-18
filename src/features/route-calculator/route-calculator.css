@@ -26,3 +26,8 @@
 .route-error { color: var(--danger-text); margin-top: 12px; }
 .route-notice { padding: 12px; background: var(--warning-bg); margin-bottom: 20px; }
 @media (max-width: 800px) { .route-layout { grid-template-columns: 1fr; } .route-calculator { padding: 16px; } .route-map { height: 340px; } }
+/* The route editor also lives in the narrower calculator column. */
+.route-calculator { container-type: inline-size; }
+.route-pickup-toggle { display: flex; gap: 8px; align-items: center; margin-bottom: 18px; }
+.route-pickup-toggle input { width: 18px; height: 18px; flex-shrink: 0; }
+@container (max-width: 750px) { .route-layout { grid-template-columns: 1fr; } .route-map { height: 300px; } }

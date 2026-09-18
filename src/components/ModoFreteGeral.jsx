@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import DistanceInput from './DistanceInput';
 import ResultDisplay, { ResultPlaceholder } from './ResultDisplay';
 import PlatformComparison from './PlatformComparison';
 import {
@@ -30,6 +31,7 @@ export default function ModoFreteGeral({
   onCalculationChange,
   onOpenPlatformSettings,
 }) {
+  const [routeRevision, setRouteRevision] = useState(0);
   const [origem, setOrigem] = useState('');
   const [destino, setDestino] = useState('');
   const [valorFrete, setValorFrete] = useState('');
@@ -60,6 +62,7 @@ export default function ModoFreteGeral({
   // Carregar dados iniciais caso venha de uma repetição no histórico
   useEffect(() => {
     if (initialData) {
+      setRouteRevision(value => value + 1);
       setOrigem(initialData.origem || '');
       setDestino(initialData.destino || '');
       setValorFrete(initialData.valor ? String(initialData.valor) : '');
@@ -224,6 +227,7 @@ export default function ModoFreteGeral({
   };
 
   const handleReset = () => {
+    setRouteRevision(value => value + 1);
     setOrigem('');
     setDestino('');
     setValorFrete('');
@@ -366,25 +370,13 @@ export default function ModoFreteGeral({
 
           {/* Distância e Retorno Vazio */}
           <div id="tour-distancia-retorno">
-            {/* Distância de Ida */}
-            <div className="field">
-              <label htmlFor="modofretegeral-field-6"> Distância de Ida (km)</label>
-              <input id="modofretegeral-field-6"
-                type="number"
-                step="1"
-                min="0"
-                placeholder="0 km (Ex: 400)"
-                value={distanciaIda}
-                onChange={e => {
-                  setDistanciaIda(e.target.value);
-                  if (isRetornoVazio && !distanciaRetorno) {
-                    setDistanciaRetorno(e.target.value);
-                  }
-                  setShowResult(false);
-                  setSaved(false);
-                }}
-              />
-            </div>
+            <DistanceInput key={routeRevision} totalOnly initialManual={Boolean(initialData)}
+              distanciaRota={distanciaIda}
+              onDistanciaRotaChange={distance => {
+                setDistanciaIda(distance);
+                setShowResult(false); setSaved(false);
+                if (onCalculationChange) onCalculationChange(false);
+              }} />
 
             {/* Card Retorno Vazio */}
             <div className={`retorno-vazio-card ${isRetornoVazio ? 'active' : ''}`}>
@@ -438,7 +430,8 @@ export default function ModoFreteGeral({
           )}
         </div>
 
-        <details className="route-details"><summary>Origem e destino (opcional)</summary>
+        <details className="route-details"><summary>Identificação no histórico (opcional)</summary>
+          <p className="hint">Estes nomes identificam a viagem no histórico. Para medir o percurso, use Por endereços acima.</p>
           {/* Origem e Destino */}
           <div className="field-row">
             <div className="field">

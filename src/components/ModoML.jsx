@@ -3,6 +3,7 @@ import DistanceInput from './DistanceInput';
 import ResultDisplay, { getCalcData, ResultPlaceholder } from './ResultDisplay';
 
 export default function ModoML({ settings, onSaveHistory, introduction, calculatorTools }) {
+  const [routeRevision, setRouteRevision] = useState(0);
   const [valor, setValor] = useState('');
   const [paradas, setParadas] = useState('');
   const [distanciaRota, setDistanciaRota] = useState('');
@@ -42,6 +43,7 @@ export default function ModoML({ settings, onSaveHistory, introduction, calculat
   };
 
   const handleReset = () => {
+    setRouteRevision(value => value + 1);
     setValor('');
     setParadas('');
     setDistanciaRota('');
@@ -86,7 +88,7 @@ export default function ModoML({ settings, onSaveHistory, introduction, calculat
             </div>
           </div>
 
-          <DistanceInput
+          <DistanceInput key={routeRevision}
             distanciaRota={distanciaRota}
             onDistanciaRotaChange={d => { setDistanciaRota(d); setShowResult(false); setSaved(false); }}
             distanciaColeta={distanciaColeta}

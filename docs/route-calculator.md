@@ -1,4 +1,4 @@
-# Calcular pela rota — etapa 1
+# Calcular pela rota — distância automática
 
 ## Análise do repositório
 
@@ -7,24 +7,26 @@ Aplicação React 19 + Vite, sem backend próprio. `src/App.jsx` coordena os mod
 configurações, tutorial e histórico. `src/utils.js` concentra custos, taxas e lucro;
 `ModoFreteGeral`, `ModoML` e `ModoLalamove` consomem essa lógica. Existe uma busca
 anterior em `DistanceInput.jsx` / `services/osrm.js` usando Nominatim e OSRM.
-Esse fluxo não é substituído nesta etapa. O service worker atual ignora domínios
+A interface antiga de `DistanceInput` foi substituída pelo cálculo ORS compartilhado;
+`services/osrm.js` permanece no repositório, mas não é usado nessa interface. O service worker atual ignora domínios
 externos; o proxy desta implementação deve usar uma origem separada.
 Não havia suíte de testes nem workflows de deploy versionados na árvore analisada.
 
 ## Plano e escopo
 
-1. **Etapa 1, implementada nesta branch:** painel independente e carregado sob demanda;
-   mapa MapLibre/OpenFreeMap; localização opcional; seleção de endereços via ORS;
-   coleta, até oito paradas reordenáveis, destino; desenho da rota e resumo.
-   Cloudflare Worker valida entrada, guarda a chave e normaliza as respostas.
-2. **Homologação pendente:** configurar chave e Worker de preview, testar endereços
-   reais (principalmente Manaus), precisão do GPS, HTTPS em celular, quotas e
-   comportamento do PWA. Publicar esse ambiente somente quando autorizado.
-3. **Etapa futura, fora deste pedido:** definir como aplicar deslocamento à coleta,
-   entrega e retorno na calculadora; integração somente por ação explícita do usuário,
-   com testes de regressão financeira. Não presumir retorno igual à ida.
-4. **Produção futura:** aprovação após homologação; habilitar flag apenas no ambiente
-   aprovado. Sem merge ou deploy de produção nesta tarefa.
+1. **Implementado:** mapa, saída digitada ou GPS, destino e até oito paradas;
+   coleta intermediária opcional. Worker ORS com chave protegida.
+2. **Correção solicitada em 18/09:** `DistanceInput` compartilhado dentro de Frete
+   Geral, Mercado Livre e Lalamove/inDrive. Ao selecionar todos os endereços, a rota
+   é consultada automaticamente (400 ms de espera para agrupar alterações) e a
+   distância alimenta os campos existentes. Não é necessário digitar quilômetros.
+   Frete Geral recebe o total de ida; os outros modos recebem coleta e entrega
+   separados, somados uma única vez. Fórmulas de custos e taxas não foram alteradas.
+3. **Homologação pendente:** configurar chave e Worker de preview, validar rotas reais,
+   GPS e layout em celular. Chave ORS e Worker publicado ainda não estão disponíveis.
+4. **Produção futura:** sem merge/deploy neste pedido. Habilitar a flag no ambiente
+   aprovado somente após homologação. Retorno vazio continua sendo uma opção
+   separada existente; a rota automática não solicita nem adiciona uma volta.
 
 ## Arquitetura
 
@@ -37,29 +39,34 @@ Não havia suíte de testes nem workflows de deploy versionados na árvore anali
   `/v2/directions/driving-car/geojson`, com coordenadas `[longitude, latitude]`.
 - `instructions: true` preserva segmentos (o backend ORS remove segmentos quando
   false). As instruções não são devolvidas ao cliente, apenas distância/duração.
-- Ordem: localização atual (opcional) → coleta → paradas → destino. Sem otimização
+- Ordem: saída (endereço ou GPS) → coleta (se habilitada) → paradas → destino. Sem otimização
   automática, retorno implícito ou mudanças nas fórmulas financeiras.
 - Distância em metros e tempo em segundos preservados; arredondamento só na tela.
 - Endereços são confirmados pelo usuário entre até cinco resultados. Busca por botão
-  ou Enter, sem requisições a cada tecla. Alterações invalidam a rota anterior e
-  cancelam consultas obsoletas. Paradas possuem IDs estáveis.
+  ou Enter, sem requisições a cada tecla. Alterações invalidam a rota anterior, zeram a distância vinculada à calculadora e
+  cancelam consultas obsoletas. O cálculo financeiro fica bloqueado até uma nova
+  distância válida, evitando usar quilômetros de outro endereço. Paradas possuem IDs estáveis.
 - Dados de localização/endereço ficam apenas no estado do painel; não são gravados
-  em localStorage, histórico ou cache do proxy. Fechar o painel descarta os pontos.
+  em localStorage, histórico ou cache do proxy. Mudar para entrada manual ou trocar o modo de serviço descarta os pontos.
+  Voltar ao modo por endereços limpa a distância antiga. Reiniciar a viagem limpa o
+  editor; carregar histórico começa em modo manual para preservar a distância salva.
 - Atribuições OpenFreeMap/OSM no mapa e ORS/HeiGIT abaixo do resumo.
 
 ## Arquivos
 
 | Área | Arquivos |
 | --- | --- |
-| Integração isolada | `src/App.jsx` |
+| Integração | `DistanceInput.jsx`, `ModoFreteGeral.jsx`, `ModoML.jsx`, `ModoLalamove.jsx` |
 | Interface e mapa | `src/features/route-calculator/*.jsx`, `route-calculator.css` |
 | HTTP e modelo | `route-api.js`, `route-model.js` |
 | Proxy | `workers/route-proxy/src/index.js`, `wrangler.jsonc` |
 | Configuração exemplo | `.env.example`, `workers/route-proxy/.dev.vars.example` |
 | Testes | `tests/route-calculator.test.js` |
 
-`src/utils.js`, componentes financeiros, histórico, configurações e serviço OSRM
-existente permanecem sem alterações.
+`src/utils.js` e suas fórmulas, configurações e serviço OSRM existente permanecem
+sem alterações. Os componentes de modo apenas recebem a distância calculada e
+reiniciam o estado do editor. Origem/destino informativos foram renomeados para
+“Identificação no histórico” para não confundir com os endereços do roteamento.
 
 ## Executar localmente
 
@@ -92,7 +99,10 @@ Em outro terminal:
 npm run dev
 ```
 
-Abra `http://localhost:5173` e o botão **Calcular pela rota**, abaixo do modo atual.
+Abra `http://localhost:5173` e selecione **Por endereços** na seção de distância.
+Quando a flag está ligada, essa entrada é o padrão; o modo **Informar quilômetros**
+continua disponível como alternativa. Selecione a saída e o destino nos resultados
+de busca. A consulta da rota ocorre automaticamente, sem botão extra ou campo de km.
 Localhost permite geolocalização; em um celular acessando um IP da rede é necessário
 HTTPS. A flag está desligada por padrão. Sem URL do proxy, o painel mostra o mapa
 com uma mensagem de configuração pendente. Reinicie Vite após mudar variáveis.
@@ -141,7 +151,10 @@ VITE_ROUTE_CALCULATOR_ENABLED=true VITE_ROUTE_PROXY_URL=http://localhost:8787 np
 
 Testes automatizados do modelo e Worker: ordem e validação de pontos, coleta separada,
 CORS/preflight, métodos, tamanho de JSON, rate limit, ausência de chave, contrato ORS,
-erros do provedor e remoção de metadados. Mocks não comprovam disponibilidade externa. Os nove testes passaram e os builds
+erros do provedor e remoção de metadados. Mocks não comprovam disponibilidade externa. Os testes do Worker, modelo e integração React cobrem também o envio de quilômetros
+aos três componentes reais da calculadora, falha/retry, edição e resposta atrasada.
+As consultas externas e o mapa WebGL são substituídos por mocks na integração.
+Os testes passaram e os builds
 com a flag ligada e desligada passaram. O empacotamento do Worker também passou
 com `npx wrangler@4 deploy --dry-run --config workers/route-proxy/wrangler.jsonc`
 (Wrangler 4.134.0), sem publicar. A verificação visual automatizada foi
