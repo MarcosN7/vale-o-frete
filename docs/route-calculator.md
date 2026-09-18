@@ -173,3 +173,35 @@ antes/depois. Não liberar em produção antes dessa homologação.
 - https://giscience.github.io/openrouteservice/api-reference/endpoints/geocoder/
 - https://github.com/GIScience/openrouteservice/blob/main/ors-engine/src/main/java/org/heigit/ors/routing/RouteResultBuilder.java
 - https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+
+## Busca por CEP
+
+Os mesmos campos aceitam CEP brasileiro com oito dígitos (`01001000`) ou com hífen
+(`01001-000`). O Worker valida o formato, consulta `https://viacep.com.br/ws/{cep}/json/`
+e envia rua, bairro, cidade e UF ao geocoding ORS. A chave ORS não é enviada ao ViaCEP.
+Nenhuma nova chave ou variável de configuração é necessária.
+
+O endereço resolvido aparece no campo, podendo ser editado para acrescentar número.
+O usuário precisa selecionar uma sugestão antes do cálculo automático. Resultados
+obtidos pelo CEP são identificados como localização aproximada. CEP não garante a
+posição da entrada do imóvel. Se o CEP só identificar uma cidade, ou se ORS não
+retornar rua/endereço/estabelecimento, não são fornecidas coordenadas de centro de
+cidade como destino; a interface solicita completar o endereço. CEP inexistente,
+inválido e indisponibilidade do provedor têm mensagens específicas.
+
+A consulta ViaCEP tem timeout de 7 s, seguida da consulta ORS (15 s), dentro do timeout
+cliente de 25 s. Não há consultas por tecla, persistência de CEP nem cache adicional.
+O rate limit do Worker também se aplica. Documentação: https://viacep.com.br/
+
+Para atualizar o teste local e o Worker já configurado:
+
+```sh
+git pull --ff-only origin feature/route-calculator
+npm ci
+npx wrangler@4 deploy --config workers/route-proxy/wrangler.jsonc
+npm run dev
+```
+
+O deploy atualiza somente `vale-o-frete-route-preview`; mantém o secret `ORS_API_KEY`
+existente. Não faz merge na main nem deploy do site de produção. Este commit não foi
+publicado no Worker durante a implementação; é necessário executar o comando acima.

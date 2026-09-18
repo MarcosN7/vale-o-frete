@@ -1,5 +1,7 @@
 import { validCoordinate, MAX_STOPS } from '../../../src/features/route-calculator/route-model.js';
 
+import { parsePostalQuery } from '../../../src/features/route-calculator/postal-code.js';
+
 const upstream = 'https://api.openrouteservice.org';
 const numeric = value => Number.isFinite(value) && value >= 0;
 const validSummary = value => numeric(value?.distance) && numeric(value?.duration);
@@ -41,6 +43,25 @@ async function ors(url, options) {
   catch { throw new HttpError(502, 'Resposta inválida do serviço de rotas.'); }
 }
 
+async function postalAddress(cep) {
+  let response;
+  try {
+    response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: AbortSignal.timeout(7000) });
+  } catch { throw new HttpError(504, 'A consulta de CEP demorou a responder. Tente novamente ou busque pela rua e cidade.'); }
+  if (!response.ok) throw new HttpError(502, 'A consulta de CEP está indisponível. Busque pela rua e cidade.');
+  let data;
+  try { data = await response.json(); }
+  catch { throw new HttpError(502, 'Resposta inválida da consulta de CEP.'); }
+  if (data?.erro === true || data?.erro === 'true') throw new HttpError(404, 'CEP não encontrado. Confira os oito dígitos.');
+  const clean = key => typeof data?.[key] === 'string' ? data[key].trim().slice(0, 150) : '';
+  const city = clean('localidade'); const state = clean('uf');
+  if (!city || !/^[A-Z]{2}$/.test(state) || clean('cep').replace('-', '') !== cep) {
+    throw new HttpError(502, 'Resposta inválida da consulta de CEP.');
+  }
+  const street = clean('logradouro'); const district = clean('bairro');
+  return { street, query: [street, district, city, state, 'Brasil'].filter(Boolean).join(', ') };
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin');
@@ -63,15 +84,31 @@ export default {
       if (!success) { headers['Retry-After'] = '60'; throw new HttpError(429, 'Muitas consultas. Aguarde um minuto.'); }
       const body = await readBody(request);
       if (path === '/geocode') {
-        const query = typeof body?.query === 'string' ? body.query.trim() : '';
+        let query = typeof body?.query === 'string' ? body.query.trim() : '';
+        const postal = parsePostalQuery(query);
+        if (postal.kind === 'invalid') throw new HttpError(400, 'Informe um CEP com oito dígitos, com ou sem hífen.');
         if (query.length < 3 || query.length > 200) throw new HttpError(400, 'Informe um endereço entre 3 e 200 caracteres.');
+        let postalMessage = '';
+        if (postal.kind === 'cep') {
+          const address = await postalAddress(postal.cep);
+          if (!address.street) return reply({ results: [], suggestedQuery: address.query,
+            message: 'Este CEP não identifica uma rua. Acrescente a rua e o número ao endereço no campo de busca e busque novamente.' });
+          query = address.query;
+          postalMessage = 'Endereço obtido pelo CEP. O ponto é aproximado: confira no mapa. Para maior precisão, acrescente o número do imóvel e busque novamente.';
+        }
         const url = new URL(`${upstream}/geocode/search`);
         url.search = new URLSearchParams({ api_key: env.ORS_API_KEY, text: query, size: '5', 'boundary.country': 'BRA', lang: 'pt' });
         const data = await ors(url, {});
         if (!Array.isArray(data.features)) throw new HttpError(502, 'Resposta inválida da busca.');
-        return reply({ results: data.features.filter(item => validCoordinate(item.geometry?.coordinates)).map(item => ({
+        const results = data.features.filter(item => validCoordinate(item.geometry?.coordinates) &&
+          (postal.kind !== 'cep' || ['address', 'street', 'venue'].includes(item.properties?.layer))).map(item => ({
           label: String(item.properties?.label || query), coordinates: item.geometry.coordinates,
-        })) });
+          ...(postal.kind === 'cep' ? { note: 'Localização aproximada obtida pelo CEP. Confira o ponto no mapa.' } : {}),
+        }));
+        return reply({ results, ...(postal.kind === 'cep' ? {
+          suggestedQuery: query,
+          message: results.length ? postalMessage : 'O CEP foi encontrado, mas não localizamos a rua no mapa. Confira o endereço no campo de busca, acrescente o número e tente novamente.',
+        } : {}) });
       }
       const coordinates = body?.coordinates;
       if (!Array.isArray(coordinates) || coordinates.length < 2 || coordinates.length > MAX_STOPS + 3 || !coordinates.every(validCoordinate)) {

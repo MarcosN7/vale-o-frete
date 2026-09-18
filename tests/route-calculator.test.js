@@ -103,3 +103,62 @@ test('direct and pickup itineraries require every selected endpoint', async () =
   assert.deepEqual(distanceInputs(feature, true), { totalKm: 3, approachKm: 1, deliveryKm: 2 });
   assert.deepEqual(distanceInputs(feature, false), { totalKm: 3, approachKm: 0, deliveryKm: 3 });
 });
+
+test('CEP parser accepts both formats and preserves street names with digits', async () => {
+  const { parsePostalQuery } = await import('../src/features/route-calculator/postal-code.js');
+  for (const query of ['01001000', '01001-000', ' 01001-000 ']) assert.deepEqual(parsePostalQuery(query), { kind: 'cep', cep: '01001000' });
+  for (const query of ['1234567', '123456789', '123-45678']) assert.equal(parsePostalQuery(query).kind, 'invalid');
+  for (const query of ['Rua 24 de Maio, 100, Manaus', 'DB Ponta Negra Manaus']) assert.equal(parsePostalQuery(query).kind, 'address');
+});
+
+const cepData = { cep: '01001-000', logradouro: 'Praça da Sé', bairro: 'Sé', localidade: 'São Paulo', uf: 'SP' };
+test('CEP lookup expands through ViaCEP then ORS without forwarding the ORS key to ViaCEP', async () => {
+  for (const query of ['01001000', '01001-000']) {
+    const calls = [];
+    globalThis.fetch = async (url, options) => {
+      calls.push(String(url));
+      if (String(url).includes('viacep.com.br')) {
+        assert.equal(String(url), 'https://viacep.com.br/ws/01001000/json/');
+        assert.equal(options.headers?.Authorization, undefined);
+        return Response.json(cepData);
+      }
+      assert.equal(url.searchParams.get('text'), 'Praça da Sé, Sé, São Paulo, SP, Brasil');
+      assert.equal(url.searchParams.get('api_key'), 'test-secret');
+      return Response.json({ features: [
+        { geometry: { coordinates: [-46.63, -23.55] }, properties: { label: 'Praça da Sé, São Paulo', layer: 'street' } },
+        { geometry: { coordinates: [-46.63, -23.55] }, properties: { label: 'São Paulo', layer: 'locality' } },
+      ] });
+    };
+    const response = await worker.fetch(request('geocode', { query }), env());
+    assert.equal(response.status, 200);
+    const data = await response.json();
+    assert.equal(calls.length, 2); assert.equal(data.results.length, 1);
+    assert.match(data.results[0].note, /aproximada/);
+    assert.match(data.suggestedQuery, /Praça da Sé/);
+    assert.equal(JSON.stringify(data).includes('test-secret'), false);
+  }
+});
+
+test('invalid, nonexistent, and general CEPs do not route to a guessed city center', async () => {
+  globalThis.fetch = () => { assert.fail('invalid CEP must not make an external request'); };
+  assert.equal((await worker.fetch(request('geocode', { query: '1234567' }), env())).status, 400);
+  globalThis.fetch = async () => Response.json({ erro: true });
+  assert.equal((await worker.fetch(request('geocode', { query: '99999999' }), env())).status, 404);
+  globalThis.fetch = async url => {
+    assert.match(String(url), /viacep/);
+    return Response.json({ ...cepData, logradouro: '' });
+  };
+  const response = await worker.fetch(request('geocode', { query: '01001000' }), env());
+  const data = await response.json();
+  assert.deepEqual(data.results, []); assert.match(data.message, /não identifica uma rua/);
+});
+
+test('CEP provider failures are handled without leaking details', async () => {
+  for (const reply of [() => new Response('secret', { status: 500 }), () => Response.json({}), () => new Response('{invalid')]) {
+    globalThis.fetch = async () => reply();
+    const response = await worker.fetch(request('geocode', { query: '01001000' }), env());
+    assert.equal(response.status, 502); assert.equal((await response.text()).includes('secret'), false);
+  }
+  globalThis.fetch = async () => { throw new Error('timeout'); };
+  assert.equal((await worker.fetch(request('geocode', { query: '01001000' }), env())).status, 504);
+});

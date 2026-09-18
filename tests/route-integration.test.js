@@ -147,3 +147,29 @@ for (const [name, Component, valueId, countId] of [
     } finally { await act(async () => renderer.unmount()); }
   });
 }
+
+test('CEP fills the resolved address but only a confirmed suggestion enables routing', async () => {
+  const calls = mockApi();
+  globalThis.routeTestApi.search = async query => {
+    if (query === '01001-000') return {
+      results: [{ label: 'Praça da Sé, São Paulo', coordinates: [-46.63, -23.55], note: 'Localização aproximada obtida pelo CEP. Confira o ponto no mapa.' }],
+      suggestedQuery: 'Praça da Sé, Sé, São Paulo, SP, Brasil',
+      message: 'Endereço obtido pelo CEP. Confira no mapa.',
+    };
+    return { results: [{ label: 'Destino Manaus', coordinates: labels.Destino }] };
+  };
+  let renderer; await act(async () => { renderer = TestRenderer.create(React.createElement(Harness)); });
+  try {
+    await select(renderer, 'Destino (coleta ou entrega)', 'Destino');
+    const label = renderer.root.findAllByType('label').find(node => node.children.join('') === 'Endereço de saída');
+    const input = renderer.root.findAllByType('input').find(node => node.props.id === label.props.htmlFor);
+    await act(async () => input.props.onChange({ target: { value: '01001-000' } }));
+    await act(async () => button(renderer, 'Buscar endereço de saída').props.onClick());
+    assert.equal(input.props.value, 'Praça da Sé, Sé, São Paulo, SP, Brasil');
+    await waitRoute(); assert.equal(calls.length, 0);
+    await act(async () => button(renderer, 'Praça da Sé, São Paulo').props.onClick());
+    await waitRoute(); assert.equal(calls.length, 1);
+    assert.equal(values(renderer).delivery, 10);
+    assert.ok(renderer.root.findAllByType('p').some(node => node.children.join('').includes('Localização aproximada obtida pelo CEP')));
+  } finally { await act(async () => renderer.unmount()); }
+});

@@ -93,7 +93,7 @@ export default function RouteCalculator({ onDistanceChange }) {
         </div></div>)}
       <button type="button" className="text-button" disabled={stops.length >= MAX_STOPS} onClick={() => { invalidate(); setStops(previous => [...previous, { id: ++nextId.current, point: null }]); }}>+ Adicionar parada ({stops.length}/{MAX_STOPS})</button>
       <AddressField label={includePickup ? "Endereço de entrega" : "Destino (coleta ou entrega)"} value={destination} disabled={!proxyConfigured} onChange={value => { invalidate(); setDestination(value); }} />
-      <p className="route-hint">As paradas seguem a ordem acima. Informe bairro e cidade e confirme cada endereço na busca.</p>
+      <p className="route-hint">As paradas seguem a ordem acima. Busque por endereço ou CEP e confirme cada local na lista.</p>
       {busy && <p role="status">Calculando distância automaticamente…</p>}
       {!ordered && <p className="route-hint">Busque e selecione cada endereço para calcular o percurso.</p>}
       {error && ordered && <button type="button" className="btn-primary" disabled={busy || locating} onClick={() => setRetry(value => value + 1)}>Tentar calcular novamente</button>}
@@ -106,7 +106,7 @@ export default function RouteCalculator({ onDistanceChange }) {
       </div>}
       <p className="route-hint">Estimativa para carro, sem trânsito em tempo real e sem tempo de carga, descarga ou espera. Não considera restrições específicas para caminhões.</p>
       <p className="route-hint">A distância calculada é usada automaticamente no cálculo do frete. Se você alterar um endereço, o app calcula o novo percurso.</p>
-      <p className="route-hint">Ao buscar ou calcular, os endereços e pontos são enviados ao serviço de rotas. Eles não são salvos no histórico do aplicativo.</p>
+      <p className="route-hint">Ao buscar ou calcular, os endereços e pontos são enviados ao serviço de rotas. Consultas por CEP também são enviadas ao ViaCEP. Eles não são salvos no histórico do aplicativo.</p>
       <p className="route-hint">Rotas e busca: <a href="https://openrouteservice.org/" target="_blank" rel="noreferrer">© openrouteservice / HeiGIT</a> • Dados <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a></p>
     </div></div>
   </section>;

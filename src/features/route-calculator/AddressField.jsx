@@ -12,12 +12,13 @@ export default function AddressField({ label, value, onChange, disabled }) {
   async function search() {
     active.current?.abort();
     const controller = new AbortController(); active.current = controller;
-    setBusy(true); setMessage(''); setResults([]);
+    setBusy(true); setMessage(''); setResults([]); onChange(null);
     try {
       const data = await searchAddresses(text.trim(), controller.signal);
       if (controller.signal.aborted) return;
       setResults(data.results);
-      setMessage(data.results.length ? 'Selecione o endereço correto abaixo.' : 'Nenhum endereço encontrado. Inclua bairro e cidade.');
+      if (data.suggestedQuery) setText(data.suggestedQuery);
+      setMessage(data.message || (data.results.length ? 'Selecione o endereço correto abaixo.' : 'Nenhum endereço encontrado. Inclua bairro e cidade.'));
     } catch (error) { if (!controller.signal.aborted) setMessage(error.message); }
     finally { if (!controller.signal.aborted) setBusy(false); }
   }
@@ -25,7 +26,7 @@ export default function AddressField({ label, value, onChange, disabled }) {
     <label htmlFor={id}>{label}</label>
     <div className="route-search-row">
       <input id={id} value={text} maxLength={200} disabled={disabled}
-        placeholder="Rua, número, bairro e cidade" autoComplete="off" aria-describedby={`${id}-status`}
+        placeholder="Endereço ou CEP (00000-000)" autoComplete="off" aria-describedby={`${id}-status`}
         onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!disabled && !busy && text.trim().length >= 3) search(); } }}
         onChange={event => {
           active.current?.abort(); setBusy(false); setText(event.target.value);
@@ -34,7 +35,7 @@ export default function AddressField({ label, value, onChange, disabled }) {
       <button type="button" className="btn-secondary" disabled={disabled || busy || text.trim().length < 3}
         onClick={search} aria-label={`Buscar ${label.toLowerCase()}`}>{busy ? 'Buscando…' : 'Buscar'}</button>
     </div>
-    <p id={`${id}-status`} className="route-hint" role="status">{value ? 'Endereço selecionado.' : message}</p>
+    <p id={`${id}-status`} className="route-hint" role="status">{value ? (value.note || 'Endereço selecionado.') : message}</p>
     {results.length > 0 && <ul className="route-results" aria-label={`Resultados para ${label.toLowerCase()}`}>
       {results.map((point, index) => <li key={index}><button type="button" disabled={disabled} onClick={() => {
         onChange(point); setText(point.label); setResults([]); setMessage('');
